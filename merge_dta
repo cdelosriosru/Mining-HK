@@ -1,0 +1,44 @@
+**************************************************************************************
+* PROJECT :     	Mining - HK
+* AUTHOR :				Camilo De Los Rios - Alfredo Guerra
+* PURPOSE :				Merge Mining titles data Bases and create the one that I need for the estimations
+* SOURCE :        GitHub
+**************************************************************************************
+
+      * PATHS
+      
+global data "C:\Users\camilodel\Desktop\IDB\MINING-HK\DATA"
+global tit_min "C:\Users\camilodel\Desktop\IDB\MINING-HK\DATA\Mineria\titulos_colombia\harm\full_dta"
+
+    *Import and Clean
+   
+foreach x in 08 10 17 {
+  
+  foreach y in t s 
+  
+    use "${tit_min}\int_mpios_oro_`y'_`x'", clear
+    gen mpio=substr(admin2Pcod,3,.)
+    capture gen fecha_int_`y'_`x'=susbtr(FECHA_INSC,1,4)
+    capture gen fecha_int_`y'_`x'=susbtr(FECHA_RADI,1,4)
+    gen int_`y'_`x'=1
+    keep mpio fecha_int_`y'_`x' int*
+    sort mpio fecha_int_`y'_`x'
+    collapse (min) fecha_int_`y'_`x' (sum) int_`y'_`x', by(mpio)
+    
+    if `y'==t{
+    
+    label var fecha_int_`y'_`x' "Fecha más temprana de evidencia de títulos mineros que intersecan al mpio según shp de 20 `x'"
+    label var int_`y'_`x' "Número de títulos que intersecan al municipio en el 20`x'"
+    }
+    
+    else {
+    label var fecha_int_`y'_`x' "Fecha más temprana de evidencia de solicitudes mineros que intersecan al mpio según shp de 20 `x'"
+    label var int_`y'_`x' "Número de solicitudes que intersecan al municipio en el 20`x'"
+    }
+    
+    sa "${tit_min}\int_clean_t_`x'.dta", replace
+  
+  }
+ }
+
+
