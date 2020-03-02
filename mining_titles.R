@@ -174,7 +174,7 @@ s_10_st<-st_as_sf(s_10)
 s_17_st<-st_as_sf(s_17)
 
 # set the folder where I want everything to be saved. 
-setwd(paste(mineria,'/harm/full_dta',sep="")) 
+setwd(paste(mineria,'/harm',sep="")) 
 
 #------INTERSECTION------
 
