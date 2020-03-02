@@ -11,34 +11,108 @@ global data "C:\Users\camilodel\Desktop\IDB\MINING-HK\DATA"
 global tit_min "C:\Users\camilodel\Desktop\IDB\MINING-HK\DATA\Mineria\titulos_colombia\harm\full_dta"
 
     *Import and Clean
-   
-foreach x in 08 10 17 {
+
+*First for Intersections
+
+foreach x in 08 10 17 {  
   
-  foreach y in t s 
-  
-    use "${tit_min}\int_mpios_oro_`y'_`x'", clear
-    gen mpio=substr(admin2Pcod,3,.)
-    capture gen fecha_int_`y'_`x'=susbtr(FECHA_INSC,1,4)
-    capture gen fecha_int_`y'_`x'=susbtr(FECHA_RADI,1,4)
-    gen int_`y'_`x'=1
-    keep mpio fecha_int_`y'_`x' int*
-    sort mpio fecha_int_`y'_`x'
-    collapse (min) fecha_int_`y'_`x' (sum) int_`y'_`x', by(mpio)
+    use "${tit_min}\int_mpios_oro_t_`x'", clear
     
-    if `y'==t{
-    
-    label var fecha_int_`y'_`x' "Fecha más temprana de evidencia de títulos mineros que intersecan al mpio según shp de 20 `x'"
-    label var int_`y'_`x' "Número de títulos que intersecan al municipio en el 20`x'"
-    }
-    
-    else {
-    label var fecha_int_`y'_`x' "Fecha más temprana de evidencia de solicitudes mineros que intersecan al mpio según shp de 20 `x'"
-    label var int_`y'_`x' "Número de solicitudes que intersecan al municipio en el 20`x'"
-    }
+    decode admin2Pcod, gen(muni)
+    decode FECHA_INSC, gen(datec)
+    gen mpio=substr(muni,3,.)
+    gen fecha_int_t_`x'=substr(datec,1,4)
+    destring fecha_int_t_`x', replace
+    gen int_t_`x'=1
+    keep mpio fecha_int_t_`x' int*
+    sort mpio fecha_int_t_`x'
+    collapse (min) fecha_int_t_`x' (sum) int_t_`x', by(mpio)
+
+    label var fecha_int_t_`x' "Fecha más temprana de evidencia de títulos mineros que intersecan al mpio según shp de 20 `x'"
+    label var int_t_`x' "Número de títulos que intersecan al municipio en el 20`x'"
     
     sa "${tit_min}\int_clean_t_`x'.dta", replace
+    
+    use "${tit_min}\int_mpios_oro_s_`x'", clear
+    
+    decode admin2Pcod, gen(muni)
+    decode FECHA_RADI, gen(datec)
+    gen mpio=substr(muni,3,.)
+    gen fecha_int_s_`x'=substr(datec,1,4)
+    destring fecha_int_s_`x', replace
+    gen int_s_`x'=1
+    keep mpio fecha_int_s_`x' int*
+    sort mpio fecha_int_s_`x'
+    collapse (min) fecha_int_s_`x' (sum) int_s_`x', by(mpio)
+
+    label var fecha_int_s_`x' "Fecha más temprana de evidencia de solicitudes mineros que intersecan al mpio según shp de 20 `x'"
+    label var int_s_`x' "Número de solicitudes que intersecan al municipio en el 20`x'"
+    
+    sa "${tit_min}\int_clean_s_`x'.dta", replace
+    
+    }
+    
+    
+* Now for centroids
+
+
+foreach x in 08 10 17 {  
   
-  }
- }
+    use "${tit_min}\cent_mpios_oro_t_`x'", clear
+    
+    decode admin2Pcod, gen(muni)
+    decode FECHA_INSC, gen(datec)
+    gen mpio=substr(muni,3,.)
+    gen fecha_cent_t_`x'=substr(datec,1,4)
+    destring fecha_cent_t_`x', replace
+    gen cent_t_`x'=1
+    keep mpio fecha_cent_t_`x' cent*
+    sort mpio fecha_cent_t_`x'
+    collapse (min) fecha_cent_t_`x' (sum) cent_t_`x', by(mpio)
+
+    label var fecha_cent_t_`x' "Fecha más temprana de evidencia de títulos mineros que tienen centroide en mpio según shp de 20 `x'"
+    label var cent_t_`x' "Número de títulos que  tienen centroide en municipio en el 20`x'"
+    
+    sa "${tit_min}\cent_clean_t_`x'.dta", replace
+    
+    use "${tit_min}\cent_mpios_oro_s_`x'", clear
+    
+    decode admin2Pcod, gen(muni)
+    decode FECHA_RADI, gen(datec)
+    gen mpio=substr(muni,3,.)
+    gen fecha_cent_s_`x'=substr(datec,1,4)
+    destring fecha_cent_s_`x', replace
+    gen cent_s_`x'=1
+    keep mpio fecha_cent_s_`x' cent*
+    sort mpio fecha_cent_s_`x'
+    collapse (min) fecha_cent_s_`x' (sum) cent_s_`x', by(mpio)
+
+    label var fecha_cent_s_`x' "Fecha más temprana de evidencia de solicitudes mineros que tienen centroide en mpio según shp de 20 `x'"
+    label var cent_s_`x' "Número de solicitudes que tienen centroide en municipio en el 20`x'"
+    
+    sa "${tit_min}\cent_clean_s_`x'.dta", replace
+    
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
