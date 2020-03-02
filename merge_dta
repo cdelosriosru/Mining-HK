@@ -20,13 +20,13 @@ foreach x in 08 10 17 {
     
     decode admin2Pcod, gen(muni)
     decode FECHA_INSC, gen(datec)
-    gen mpio=substr(muni,3,.)
+    gen codmpio=substr(muni,3,.)
     gen fecha_int_t_`x'=substr(datec,1,4)
     destring fecha_int_t_`x', replace
     gen int_t_`x'=1
-    keep mpio fecha_int_t_`x' int*
-    sort mpio fecha_int_t_`x'
-    collapse (min) fecha_int_t_`x' (sum) int_t_`x', by(mpio)
+    keep codmpio fecha_int_t_`x' int*
+    sort codmpio fecha_int_t_`x'
+    collapse (min) fecha_int_t_`x' (sum) int_t_`x', by(codmpio)
 
     label var fecha_int_t_`x' "Fecha más temprana de evidencia de títulos mineros que intersecan al mpio según shp de 20 `x'"
     label var int_t_`x' "Número de títulos que intersecan al municipio en el 20`x'"
@@ -37,13 +37,13 @@ foreach x in 08 10 17 {
     
     decode admin2Pcod, gen(muni)
     decode FECHA_RADI, gen(datec)
-    gen mpio=substr(muni,3,.)
+    gen codmpio=substr(muni,3,.)
     gen fecha_int_s_`x'=substr(datec,1,4)
     destring fecha_int_s_`x', replace
     gen int_s_`x'=1
-    keep mpio fecha_int_s_`x' int*
-    sort mpio fecha_int_s_`x'
-    collapse (min) fecha_int_s_`x' (sum) int_s_`x', by(mpio)
+    keep codmpio fecha_int_s_`x' int*
+    sort codmpio fecha_int_s_`x'
+    collapse (min) fecha_int_s_`x' (sum) int_s_`x', by(codmpio)
 
     label var fecha_int_s_`x' "Fecha más temprana de evidencia de solicitudes mineros que intersecan al mpio según shp de 20 `x'"
     label var int_s_`x' "Número de solicitudes que intersecan al municipio en el 20`x'"
@@ -62,13 +62,13 @@ foreach x in 08 10 17 {
     
     decode admin2Pcod, gen(muni)
     decode FECHA_INSC, gen(datec)
-    gen mpio=substr(muni,3,.)
+    gen codmpio=substr(muni,3,.)
     gen fecha_cent_t_`x'=substr(datec,1,4)
     destring fecha_cent_t_`x', replace
     gen cent_t_`x'=1
-    keep mpio fecha_cent_t_`x' cent*
-    sort mpio fecha_cent_t_`x'
-    collapse (min) fecha_cent_t_`x' (sum) cent_t_`x', by(mpio)
+    keep codmpio fecha_cent_t_`x' cent*
+    sort codmpio fecha_cent_t_`x'
+    collapse (min) fecha_cent_t_`x' (sum) cent_t_`x', by(codmpio)
 
     label var fecha_cent_t_`x' "Fecha más temprana de evidencia de títulos mineros que tienen centroide en mpio según shp de 20 `x'"
     label var cent_t_`x' "Número de títulos que  tienen centroide en municipio en el 20`x'"
@@ -79,13 +79,13 @@ foreach x in 08 10 17 {
     
     decode admin2Pcod, gen(muni)
     decode FECHA_RADI, gen(datec)
-    gen mpio=substr(muni,3,.)
+    gen codmpio=substr(muni,3,.)
     gen fecha_cent_s_`x'=substr(datec,1,4)
     destring fecha_cent_s_`x', replace
     gen cent_s_`x'=1
-    keep mpio fecha_cent_s_`x' cent*
-    sort mpio fecha_cent_s_`x'
-    collapse (min) fecha_cent_s_`x' (sum) cent_s_`x', by(mpio)
+    keep codmpio fecha_cent_s_`x' cent*
+    sort codmpio fecha_cent_s_`x'
+    collapse (min) fecha_cent_s_`x' (sum) cent_s_`x', by(codmpio)
 
     label var fecha_cent_s_`x' "Fecha más temprana de evidencia de solicitudes mineros que tienen centroide en mpio según shp de 20 `x'"
     label var cent_s_`x' "Número de solicitudes que tienen centroide en municipio en el 20`x'"
@@ -93,10 +93,28 @@ foreach x in 08 10 17 {
     sa "${tit_min}\cent_clean_s_`x'.dta", replace
     
     }
+    
+ * Merge data
 
+use "${tit_min}\int_mpios_oro_t_08.dta", clear
 
+foreach x in int cent{
+     foreach y in t s{
+          foreach z in 08 10 17{          
+          merge 1:1 codmpio using "${tit_min}\`x'_mpios_oro_`y'_`z'.dta"
+          rename _merge mer_`x'`y'`z'
+          }
+       }
+   }
 
+sa "${tit_min}\full_t_s.dta", replace
 
+*merge with Jacome
+
+merge 1:1 codmpio using "${data}\Mineria\jacome78.dta"
+rename _merge m_jacome
+
+sa "${data}\Mineria\harm\t_s_jac.dta", replace
 
 
 
