@@ -52,7 +52,7 @@ oil <- oil[,(names(oil) %in% keep_oil)]
 oil$ID<- seq.int(nrow(oil))
 
 oil <- oil[grepl(c('EXPLORACION|PRODUCCION|TEA'),oil$ESTAD_AREA),]
-oil$a_km2<-area(oil)/1000000 
+oil$a_oil_km2<-area(oil)/1000000 
 oil<-spTransform(oil, crs(mpios)) 
 writeOGR(oil, dsn="harm", layer="oil", driver ="ESRI Shapefile", overwrite_layer = T)
 oil <- readOGR(dsn="harm", layer="oil") 
