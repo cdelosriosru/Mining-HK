@@ -1,0 +1,158 @@
+# PROJECT :     		Mining and Human Capital
+# AUTHOR :				Camilo De Los Rios Rueda
+# PURPOSE :				merge geo anomalies with municipalities in Colombia. This creates the data bases necessary to 
+#                 perform the econometric analysis. I have three ways of measuring anomalies
+# LAST REVISED BY :   	Camilo De Los Rios  Rueda
+
+##==============================================================================
+## INITIALIZE
+##==============================================================================
+
+
+library(dplyr)
+library(sf)
+library(sp)
+library(rgdal)
+library(maptools)
+library(rgeos)
+library(raster)
+library(sf)
+library(raster)
+library(stars)
+library(maps)
+library(geosphere)
+library(foreign)
+library(tidyverse)
+library(xlsx)
+library(plyr)
+library(cleangeo)
+
+
+##==============================================================================
+## PATHS
+##==============================================================================
+data = "C:/Users/camilodel/Desktop/IDB/MINING-HK/DATA"
+geo = paste(data,"/Mineria/geo ", sep="") 
+municipios = paste(data,"/PoliticalBoundaries/Colombia", sep="")
+#-----------------------------------IMPORTING FILES----------------------------------------
+
+setwd(municipios)
+
+mpios<- readOGR(dsn="municipios", layer="municipios") # EPSG:4326
+mpios$a_m_km2<-area(mpios)/1000000 # create the area of each municipality; it might be useful.
+
+setwd(geo)
+geo<- readOGR(dsn="raw", layer="Zonas_Potenciales_Integradas_Recursos_Minerales_Grupo1_Metales_y__Minerales_Preciosos")
+
+keep_geo <- c("ELEM_PRINC","POTENCIAL","RESTRICCIO")
+
+geo <- geo[,(names(geo) %in% keep_geo)]
+geo$ID<- seq.int(nrow(geo))
+
+
+geo <- geo[grepl('Au',geo$ELEM_PRINC),]
+geo$a_geo_km2<-area(geo)/1000000 
+geo<-spTransform(geo, crs(mpios)) 
+writeOGR(geo, dsn="harm", layer="geo", driver ="ESRI Shapefile", overwrite_layer = T)
+geo <- readOGR(dsn="harm", layer="geo") 
+
+
+#------BASICS--------- 
+# Basic convertions that I need for more than one task. 
+
+mpios<-clgeo_Clean(mpios)
+geo<-clgeo_Clean(geo)
+
+mpios_st<-st_as_sf(mpios)
+geo_st<-st_as_sf(geo)
+
+
+# set the folder where I want everything to be saved. 
+setwd(paste(geo,'/harm',sep=""))
+
+#------INTERSECTION------
+
+mpios_geo<-raster::intersect(geo,mpios)
+mpios_geo<-as.data.frame(mpios_geo)
+write.dta(mpios_geo, "int_mpios_geo.dta")
+
+
+#----CENTROIDS----
+
+c_geo<-SpatialPointsDataFrame(gCentroid(geo, byid=TRUE), geo@data, match.ID = FALSE) 
+c_geo_st<-st_as_sf(c_geo)
+mpios_geo_st<-st_intersection(mpios_st,c_geo_st) 
+mpios_geo<-as(mpios_geo_st,'Spatial')
+mpios_geo_dta<- as.data.frame(mpios_geo, xy=TRUE, na.rm=TRUE)
+write.dta(mpios_geo_dta, "cent_mpios_geo.dta")
+
+
+
+#-------AREAS--------
+
+#Ok this turned out to be a real nightmare.... The best thing that I can do, for now, is to merge all the polygons regardless of the date. 
+
+    mx<-gIntersects(geo, byid=TRUE)
+    
+    # create a list for the results
+    results.list<-as.list(vector(length=ncol(mx)))
+    
+    # group
+    for(i in 1:ncol(mx)) {
+      tmp <- which(mx[,i]) # get TRUE FALSE values for the i-th column
+      ifelse(length(tmp)>1, # if there is more than 1 TRUE value,
+             tmp.expand<-which(apply(mx[,tmp],1,any)), # get the row-number of the other TRUE Values and create a vector called expand
+             tmp.expand<-tmp) # otherwise define tmp as expand
+      while(length(tmp.expand)>length(tmp)){ # while tmp.expand has more items than tmp
+        tmp<-tmp.expand # reset tmp to tmp.expand
+        tmp.expand<-as.vector(which(apply(mx[,tmp],1,any))) # get all new row-numbers of new TRUE values
+      }
+      
+      results.list[[i]]<-tmp.expand # store results in the list
+      print(paste("nr", i, "out of", ncol(mx),"done", sep=" "))
+    }
+    
+    # create unique ids from the results
+    results.list<-
+      llply(.data = results.list,
+            .fun = function(x)paste(x,collapse=""))
+
+    #join everything and convert to usual data type. It is to remark that we lose the attributes and I havent figuresd out how to keep them. This implies that we are not going to have a date to work with. 
+    
+    join<-unionSpatialPolygons(geo,IDs=results.list)
+    join <- as(join, "SpatialPolygonsDataFrame")
+    join<-clgeo_Clean(join)
+    join_st <-st_as_sf(join)
+    join_st$ID_j<- seq.int(nrow(join_st))
+
+    # intersect - note that sf is intelligent with attribute data!
+    pi <- st_intersection(mpios_st, join_st)
+    as.data.frame(pi)
+    
+    # add in areas in m2
+    attArea <- pi %>% 
+      mutate(area = st_area(.) %>% as.numeric())
+    
+    # for each field get area per title
+    attArea %>% 
+      as_tibble() %>% 
+      group_by(admin2Pcod, ID) %>% 
+      summarize(area = sum(area))
+    
+    pi<-attArea
+    pi$a_inter_pc<-(pi$area/1000000)/pi$a_m_km2
+    pi<-as(pi,'Spatial')
+    pi<-as.data.frame(pi)
+
+    write.dta(data = pi , file = "area_mpios_geo.dta")
+    
+
+
+
+
+
+
+
+
+
+
