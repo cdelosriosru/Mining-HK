@@ -64,7 +64,7 @@ oil <- readOGR(dsn="harm", layer="oil")
 mpios<-clgeo_Clean(mpios)
 oil<-clgeo_Clean(oil)
 
-mpios_st<-st_as_sf(oil)
+mpios_st<-st_as_sf(mpios)
 oil_st<-st_as_sf(oil)
 
 
