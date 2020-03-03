@@ -45,6 +45,12 @@ mpios$a_m_km2<-area(mpios)/1000000 # create the area of each municipality; it mi
 
 setwd(oil)
 oil<- readOGR(dsn="raw", layer="Tierras_SEPTIEMBRE_170919")
+
+keep_oil <- c("FECHA_FIRM","ESTAD_AREA","OPR_ABR", "CUENCA_SED") 
+
+oil <- oil[,(names(oil) %in% keep_oil)]
+oil$ID<- seq.int(nrow(oil))
+
 oil <- oil[grepl(c('EXPLORACION|PRODUCCION|TEA'),oil$ESTAD_AREA),]
 oil$a_km2<-area(oil)/1000000 
 oil<-spTransform(oil, crs(mpios)) 
@@ -61,11 +67,6 @@ oil<-clgeo_Clean(oil)
 mpios_st<-st_as_sf(oil)
 oil_st<-st_as_sf(oil)
 
-
-keep_oil <- c("FECHA_FIRM","ESTAD_AREA","OPR_ABR", "CUENCA_SED") 
-
-oil <- oil[,(names(oil) %in% keep_oil)]
-oil$ID<- seq.int(nrow(oil))
 
 # set the folder where I want everything to be saved. 
 setwd(paste(oil,'/harm',sep=""))
