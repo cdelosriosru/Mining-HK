@@ -159,7 +159,7 @@ keep codmpio fecha_in* *_int
 
 sort codmpio
 
-collapse (min) fecha* (sum) n_*, by(codmpi)
+collapse (min) fecha* (sum) n_*, by(codmpio)
 
 gen prod_int = prod_int/prod_int
 recode prod_int(.=0)
