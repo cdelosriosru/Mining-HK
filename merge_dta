@@ -183,13 +183,16 @@ label var fecha_int_oil_prod "Fecha más temprana de evidencia de área en produ
 label var fecha_int_oil_expl "Fecha más temprana de evidencia de área en explotación que interseca al mpio a 2017"
 label var fecha_int_oil_tea "Fecha más temprana de evidencia de área en TEA que interseca al mpio a 2017"
 
+sa "${oil}\full_oil.dta", replace
 
 
 
+/*******************************************
+               GEO ANOMALIES
+*******************************************/
 
 
-
-
+blaaaa
 
 
 
