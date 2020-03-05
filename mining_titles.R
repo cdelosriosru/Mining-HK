@@ -297,7 +297,7 @@ write.dta(mpios_oro_s_17_dta, "cens_mpios_oro_s_17.dta")
     # for each field get area per title
     attArea %>% 
       as_tibble() %>% 
-      group_by(admin2Pcod, ID) %>% 
+      group_by(admin2Pcod, ID_j) %>% 
       summarize(area = sum(area))
     
     pi<-attArea
@@ -354,7 +354,7 @@ write.dta(mpios_oro_s_17_dta, "cens_mpios_oro_s_17.dta")
     # for each field get area per title
     attArea %>% 
       as_tibble() %>% 
-      group_by(admin2Pcod, ID) %>% 
+      group_by(admin2Pcod, ID_j) %>% 
       summarize(area = sum(area))
     
     pi<-attArea
@@ -410,7 +410,7 @@ write.dta(mpios_oro_s_17_dta, "cens_mpios_oro_s_17.dta")
     # for each field get area per title
     attArea %>% 
       as_tibble() %>% 
-      group_by(admin2Pcod, ID) %>% 
+      group_by(admin2Pcod, ID_j) %>% 
       summarize(area = sum(area))
     
     pi<-attArea
@@ -468,7 +468,7 @@ write.dta(mpios_oro_s_17_dta, "cens_mpios_oro_s_17.dta")
     # for each field get area per title
     attArea %>% 
       as_tibble() %>% 
-      group_by(admin2Pcod, ID) %>% 
+      group_by(admin2Pcod, ID_j) %>% 
       summarize(area = sum(area))
     
     pi<-attArea
@@ -527,7 +527,7 @@ write.dta(mpios_oro_s_17_dta, "cens_mpios_oro_s_17.dta")
     # for each field get area per title
     attArea %>% 
       as_tibble() %>% 
-      group_by(admin2Pcod, ID) %>% 
+      group_by(admin2Pcod, ID_j) %>% 
       summarize(area = sum(area))
     
     pi<-attArea
@@ -583,7 +583,7 @@ write.dta(mpios_oro_s_17_dta, "cens_mpios_oro_s_17.dta")
     # for each field get area per title
     attArea %>% 
       as_tibble() %>% 
-      group_by(admin2Pcod, ID) %>% 
+      group_by(admin2Pcod, ID_j) %>% 
       summarize(area = sum(area))
     
     pi<-attArea
