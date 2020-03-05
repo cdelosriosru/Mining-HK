@@ -34,7 +34,7 @@ library(cleangeo)
 ## PATHS
 ##==============================================================================
 data = "C:/Users/camilodel/Desktop/IDB/MINING-HK/DATA"
-oil = paste(data,"/Petroleo", sep="") 
+oil_f = paste(data,"/Petroleo", sep="") 
 municipios = paste(data,"/PoliticalBoundaries/Colombia", sep="")
 #-----------------------------------IMPORTING FILES----------------------------------------
 
@@ -43,7 +43,7 @@ setwd(municipios)
 mpios<- readOGR(dsn="municipios", layer="municipios") # EPSG:4326
 mpios$a_m_km2<-area(mpios)/1000000 # create the area of each municipality; it might be useful.
 
-setwd(oil)
+setwd(oil_f)
 oil<- readOGR(dsn="raw", layer="Tierras_SEPTIEMBRE_170919")
 
 keep_oil <- c("FECHA_FIRM","ESTAD_AREA","OPR_ABR", "CUENCA_SED") 
@@ -69,7 +69,7 @@ oil_st<-st_as_sf(oil)
 
 
 # set the folder where I want everything to be saved. 
-setwd(paste(oil,'/harm',sep=""))
+setwd(paste(oil_f,'/harm',sep=""))
 
 #------INTERSECTION------
 
