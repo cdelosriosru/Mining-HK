@@ -32,7 +32,7 @@ library(cleangeo)
 ## PATHS
 ##==============================================================================
 data = "C:/Users/camilodel/Desktop/IDB/MINING-HK/DATA"
-geo = paste(data,"/Mineria/geo ", sep="") 
+geo = paste(data,"/Mineria/geo", sep="") 
 municipios = paste(data,"/PoliticalBoundaries/Colombia", sep="")
 #-----------------------------------IMPORTING FILES----------------------------------------
 
