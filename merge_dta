@@ -8,11 +8,18 @@
       * PATHS
       
 global data "C:\Users\camilodel\Desktop\IDB\MINING-HK\DATA"
-global tit_min "C:\Users\camilodel\Desktop\IDB\MINING-HK\DATA\Mineria\titulos_colombia\harm\full_dta"
+global tit_min "${data}\Mineria\titulos_colombia\harm\full_dta"
+global geo "${data}\Mineria\geo\harm"
+global oil "${data}\Petroleo\harm"
 
-    *Import and Clean
 
-*First for Intersections
+/*******************************************
+          MINING TITLES & SOLICITUDES
+*******************************************/
+
+    ****  Import and Clean the Data ****
+
+*For intersections measure
 
 foreach x in 08 10 17 {  
   
@@ -23,13 +30,15 @@ foreach x in 08 10 17 {
     gen codmpio=substr(muni,3,.)
     gen fecha_int_t_`x'=substr(datec,1,4)
     destring fecha_int_t_`x', replace
-    gen int_t_`x'=1
-    keep codmpio fecha_int_t_`x' int*
+    gen n_int_t_`x'=1
+    keep codmpio fecha_int_t_`x' n_int*
     sort codmpio fecha_int_t_`x'
-    collapse (min) fecha_int_t_`x' (sum) int_t_`x', by(codmpio)
+    collapse (min) fecha_int_t_`x' (sum) n_int_t_`x', by(codmpio)
+    gen int_t_`x"=1
 
-    label var fecha_int_t_`x' "Fecha más temprana de evidencia de títulos mineros que intersecan al mpio según shp de 20 `x'"
-    label var int_t_`x' "Número de títulos que intersecan al municipio en el 20`x'"
+    label var fecha_int_t_`x' "Fecha más temprana de evidencia de títulos de oro que intersecan al mpio según shp de 20 `x'"
+    label var n_int_t_`x' "Número de títulos de oro que intersecan al mpio al 20`x'"
+    label var int_t_`x' "Hay títulos de oro que intersecan al mpio al 20`x'"
     
     sa "${tit_min}\int_clean_t_`x'.dta", replace
     
@@ -40,20 +49,22 @@ foreach x in 08 10 17 {
     gen codmpio=substr(muni,3,.)
     gen fecha_int_s_`x'=substr(datec,1,4)
     destring fecha_int_s_`x', replace
-    gen int_s_`x'=1
+    gen n_int_s_`x'=1
     keep codmpio fecha_int_s_`x' int*
     sort codmpio fecha_int_s_`x'
-    collapse (min) fecha_int_s_`x' (sum) int_s_`x', by(codmpio)
-
-    label var fecha_int_s_`x' "Fecha más temprana de evidencia de solicitudes mineros que intersecan al mpio según shp de 20 `x'"
-    label var int_s_`x' "Número de solicitudes que intersecan al municipio en el 20`x'"
+    collapse (min) fecha_int_s_`x' (sum) n_int_s_`x', by(codmpio)
+    gen int_s_`x'=1
+     
+    label var fecha_int_s_`x' "Fecha más temprana de evidencia de solicitudes de oro que intersecan al mpio según shp de 20 `x'"
+    label var n_int_s_`x' "Número de solicitudes de oro que intersecan al mpio al 20`x'"
+    label var int_s_`x' "Hay solicitudes de oro que intersecan al mpio al 20`x'" 
     
     sa "${tit_min}\int_clean_s_`x'.dta", replace
     
     }
     
     
-* Now for centroids
+* For centroids measure
 
 
 foreach x in 08 10 17 {  
@@ -65,13 +76,15 @@ foreach x in 08 10 17 {
     gen codmpio=substr(muni,3,.)
     gen fecha_cent_t_`x'=substr(datec,1,4)
     destring fecha_cent_t_`x', replace
-    gen cent_t_`x'=1
+    gen n_cent_t_`x'=1
     keep codmpio fecha_cent_t_`x' cent*
     sort codmpio fecha_cent_t_`x'
-    collapse (min) fecha_cent_t_`x' (sum) cent_t_`x', by(codmpio)
-
+    collapse (min) fecha_cent_t_`x' (sum) n_cent_t_`x', by(codmpio)
+    gen cent_t_`x'=1
+    
     label var fecha_cent_t_`x' "Fecha más temprana de evidencia de títulos mineros que tienen centroide en mpio según shp de 20 `x'"
-    label var cent_t_`x' "Número de títulos que  tienen centroide en municipio en el 20`x'"
+    label var n_cent_t_`x' "Número de títulos de oro que tienen centroide en mpio al 20`x'"
+    label var cent_t_`x' "Hay títulos de oro que  tienen centroide en mpio al 20`x'"
     
     sa "${tit_min}\cent_clean_t_`x'.dta", replace
     
@@ -82,19 +95,20 @@ foreach x in 08 10 17 {
     gen codmpio=substr(muni,3,.)
     gen fecha_cent_s_`x'=substr(datec,1,4)
     destring fecha_cent_s_`x', replace
-    gen cent_s_`x'=1
+    gen n_cent_s_`x'=1
     keep codmpio fecha_cent_s_`x' cent*
     sort codmpio fecha_cent_s_`x'
-    collapse (min) fecha_cent_s_`x' (sum) cent_s_`x', by(codmpio)
+    collapse (min) fecha_cent_s_`x' (sum) n_cent_s_`x', by(codmpio)
+    gen cent_s_`x'=1
 
     label var fecha_cent_s_`x' "Fecha más temprana de evidencia de solicitudes mineros que tienen centroide en mpio según shp de 20 `x'"
-    label var cent_s_`x' "Número de solicitudes que tienen centroide en municipio en el 20`x'"
-    
+    label var n_cent_s_`x' "Número de solicitudes que tienen centroide en mpio al 20`x'"
+    label var cent_s_`x' "Hay solicitudes que tienen centroide en mpio al 20`x'"   
     sa "${tit_min}\cent_clean_s_`x'.dta", replace
     
     }
     
- * Merge data
+ *** Merge the Data ***
 
 use "${tit_min}\int_mpios_oro_t_08.dta", clear
 
@@ -114,14 +128,60 @@ sa "${tit_min}\full_t_s.dta", replace
 merge 1:1 codmpio using "${data}\Mineria\jacome78.dta"
 rename _merge m_jacome
 
-sa "${data}\Mineria\harm\t_s_jac.dta", replace
+sa "${data}\Mineria\harm\t_s_jac.dta", replace  // save data that has titles, solicitudes and jácome data.
 
 
 
+/*******************************************
+               OIl TITLES
+*******************************************/
+use "${oil}\int_mpios_oil.dta"
 
+gen n_prod_int = 1 if ESTAD_AREA==2
+recode n_prod_int(.=0)
+gen n_expl_int = 1 if ESTAD_AREA==1
+recode n_expl_int(.=0)
+gen n_tea_int = 1 if ESTAD_AREA==3
+recode n_tea_int(.=0)
 
+decode admin2Pcod, gen(muni)
+decode FECHA_FIRM, gen(datec)
 
+gen codmpio=substr(muni,3,.)
 
+gen fecha_int_oil=substr(datec,1,4)  
+
+gen fecha_int_oil_prod=substr(datec,1,4) if n_prod_int==1
+gen fecha_int_oil_expl=substr(datec,1,4) if n_expl_int==1
+gen fecha_int_oil_tea=substr(datec,1,4) if n_tea_int==1
+
+keep codmpio fecha_in* *_int
+
+sort codmpio
+
+collapse (min) fecha* (sum) n_*, by(codmpi)
+
+gen prod_int = prod_int/prod_int
+recode prod_int(.=0)
+gen expl_int = expl_int/expl_int
+recode expl_int(.=0)
+gen tea_int = tea_int/tea_int
+recode tea_int(.=0)
+
+gen int_oil= 1 
+recode int_oil(.=0)
+
+label var n_prod_int "Número de areas en producción que intersecan al mpio a 2017"
+label var n_expl_int "Número de areas en exploración que intersecan al mpio a 2017"
+label var n_tea_int "Número de areas en TEA que intersecan al mpio a 2017"
+label var prod_int "Hay áreas en producción que intersecan al mpio a 2017"
+label var expl_int "Hay áreas en exploración que intersecan al mpio a 2017"
+label var tea_int "Hay áreas en TEA que intersecan al mpio a 2017"
+label var int_oil "Hay áreas de hidrocarburos en el municipio"
+label var fecha_int_oil "Fecha más temprana de evidencia de área de hidrocarburos que interseca al mpio a 2017"
+label var fecha_int_oil_prod "Fecha más temprana de evidencia de área en producción que interseca al mpio a 2017"
+label var fecha_int_oil_expl "Fecha más temprana de evidencia de área en explotación que interseca al mpio a 2017"
+label var fecha_int_oil_tea "Fecha más temprana de evidencia de área en TEA que interseca al mpio a 2017"
 
 
 
