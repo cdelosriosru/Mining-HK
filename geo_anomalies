@@ -32,7 +32,7 @@ library(cleangeo)
 ## PATHS
 ##==============================================================================
 data = "C:/Users/camilodel/Desktop/IDB/MINING-HK/DATA"
-geo = paste(data,"/Mineria/geo", sep="") 
+geo_f = paste(data,"/Mineria/geo", sep="") 
 municipios = paste(data,"/PoliticalBoundaries/Colombia", sep="")
 #-----------------------------------IMPORTING FILES----------------------------------------
 
@@ -41,7 +41,7 @@ setwd(municipios)
 mpios<- readOGR(dsn="municipios", layer="municipios") # EPSG:4326
 mpios$a_m_km2<-area(mpios)/1000000 # create the area of each municipality; it might be useful.
 
-setwd(geo)
+setwd(geo_f)
 geo<- readOGR(dsn="raw", layer="Zonas_Potenciales_Integradas_Recursos_Minerales_Grupo1_Metales_y__Minerales_Preciosos")
 
 keep_geo <- c("ELEM_PRINC","POTENCIAL","RESTRICCIO")
@@ -68,7 +68,7 @@ geo_st<-st_as_sf(geo)
 
 
 # set the folder where I want everything to be saved. 
-setwd(paste(geo,'/harm',sep=""))
+setwd(paste(geo_f,'/harm',sep=""))
 
 #------INTERSECTION------
 
