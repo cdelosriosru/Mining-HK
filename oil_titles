@@ -137,7 +137,7 @@ write.dta(mpios_oil_dta, "cent_mpios_oil.dta")
     # for each field get area per title
     attArea %>% 
       as_tibble() %>% 
-      group_by(admin2Pcod, ID) %>% 
+      group_by(admin2Pcod, ID_j) %>% 
       summarize(area = sum(area))
     
     pi<-attArea
