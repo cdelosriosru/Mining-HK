@@ -135,55 +135,80 @@ sa "${data}\Mineria\harm\t_s_jac.dta", replace  // save data that has titles, so
 /*******************************************
                OIl TITLES
 *******************************************/
-use "${oil}\int_mpios_oil.dta"
 
-gen n_prod_int = 1 if ESTAD_AREA==2
-recode n_prod_int(.=0)
-gen n_expl_int = 1 if ESTAD_AREA==1
-recode n_expl_int(.=0)
-gen n_tea_int = 1 if ESTAD_AREA==3
-recode n_tea_int(.=0)
+          *** INTERSECTIONS ***
+foreach x in ce i {
 
-decode admin2Pcod, gen(muni)
-decode FECHA_FIRM, gen(datec)
+     use "${oil}\`x'nt_mpios_oil.dta"
 
-gen codmpio=substr(muni,3,.)
+     gen n_prod_`x'nt = 1 if ESTAD_AREA==2
+     recode n_prod_`x'nt(.=0)
+     gen n_expl_`x'nt = 1 if ESTAD_AREA==1
+     recode n_expl_`x'nt(.=0)
+     gen n_tea_`x'nt = 1 if ESTAD_AREA==3
+     recode n_tea_`x'nt(.=0)
 
-gen fecha_int_oil=substr(datec,1,4)  
+     decode admin2Pcod, gen(muni)
+     decode FECHA_FIRM, gen(datec)
 
-gen fecha_int_oil_prod=substr(datec,1,4) if n_prod_int==1
-gen fecha_int_oil_expl=substr(datec,1,4) if n_expl_int==1
-gen fecha_int_oil_tea=substr(datec,1,4) if n_tea_int==1
+     gen codmpio=substr(muni,3,.)
 
-keep codmpio fecha_in* *_int
+     gen fecha_`x'nt_oil=substr(datec,1,4)  
 
-sort codmpio
+     gen fecha_`x'nt_oil_prod=substr(datec,1,4) if n_prod_`x'nt==1
+     gen fecha_`x'nt_oil_expl=substr(datec,1,4) if n_expl_`x'nt==1
+     gen fecha_`x'nt_oil_tea=substr(datec,1,4) if n_tea_`x'nt==1
 
-collapse (min) fecha* (sum) n_*, by(codmpio)
+     keep codmpio fecha_`x'n* *_`x'nt
 
-gen prod_int = prod_int/prod_int
-recode prod_int(.=0)
-gen expl_int = expl_int/expl_int
-recode expl_int(.=0)
-gen tea_int = tea_int/tea_int
-recode tea_int(.=0)
+     sort codmpio
 
-gen int_oil= 1 
-recode int_oil(.=0)
+     collapse (min) fecha* (sum) n_*, by(codmpio)
 
-label var n_prod_int "Número de areas en producción que intersecan al mpio a 2017"
-label var n_expl_int "Número de areas en exploración que intersecan al mpio a 2017"
-label var n_tea_int "Número de areas en TEA que intersecan al mpio a 2017"
-label var prod_int "Hay áreas en producción que intersecan al mpio a 2017"
-label var expl_int "Hay áreas en exploración que intersecan al mpio a 2017"
-label var tea_int "Hay áreas en TEA que intersecan al mpio a 2017"
-label var int_oil "Hay áreas de hidrocarburos en el municipio"
-label var fecha_int_oil "Fecha más temprana de evidencia de área de hidrocarburos que interseca al mpio a 2017"
-label var fecha_int_oil_prod "Fecha más temprana de evidencia de área en producción que interseca al mpio a 2017"
-label var fecha_int_oil_expl "Fecha más temprana de evidencia de área en explotación que interseca al mpio a 2017"
-label var fecha_int_oil_tea "Fecha más temprana de evidencia de área en TEA que interseca al mpio a 2017"
+     gen prod_`x'nt = prod_`x'nt/prod_`x'nt
+     recode prod_`x'nt(.=0)
+     gen expl_`x'nt = expl_`x'nt/expl_`x'nt
+     recode expl_`x'nt(.=0)
+     gen tea_`x'nt = tea_`x'nt/tea_`x'nt
+     recode tea_`x'nt(.=0)
 
-sa "${oil}\full_oil.dta", replace
+     gen `x'nt_oil= 1 
+     recode `x'nt_oil(.=0)
+
+          if `x'==i{
+               label var n_prod_int "Número de areas en producción que intersecan al mpio a 2017"
+               label var n_expl_int "Número de areas en exploración que intersecan al mpio a 2017"
+               label var n_tea_int "Número de areas en TEA que intersecan al mpio a 2017"
+               label var prod_int "Hay áreas en producción que intersecan al mpio a 2017"
+               label var expl_int "Hay áreas en exploración que intersecan al mpio a 2017"
+               label var tea_int "Hay áreas en TEA que intersecan al mpio a 2017"
+               label var int_oil "Hay áreas de hidrocarburos en el municipio"
+               label var fecha_int_oil "Fecha más temprana de evidencia de área de hidrocarburos que interseca al mpio a 2017"
+               label var fecha_int_oil_prod "Fecha más temprana de evidencia de área en producción que interseca al mpio a 2017"
+               label var fecha_int_oil_expl "Fecha más temprana de evidencia de área en explotación que interseca al mpio a 2017"
+               label var fecha_int_oil_tea "Fecha más temprana de evidencia de área en TEA que interseca al mpio a 2017"
+          }
+
+          else {
+               label var n_prod_cent "Número de areas en producción que tienen centroide en mpio a 2017"
+               label var n_expl_cent "Número de areas en exploración que tienen centroide en mpio a 2017"
+               label var n_tea_cent "Número de areas en TEA que tienen centroide en mpio a 2017"
+               label var prod_cent "Hay áreas en producción que tienen centroide en mpio a 2017"
+               label var expl_cent "Hay áreas en exploración que tienen centroide en mpio a 2017"
+               label var tea_cent "Hay áreas en TEA que tienen centroide en mpio a 2017"
+               label var cent_oil "Hay áreas de hidrocarburos qur tienen centroide en en el municipio"
+               label var fecha_cent_oil "Fecha más temprana de evidencia de área de hidrocarburos que tienen centroide en mpio a 2017"
+               label var fecha_cent_oil_prod "Fecha más temprana de evidencia de área en producción que tienen centroide en mpio a 2017"
+               label var fecha_cent_oil_expl "Fecha más temprana de evidencia de área en explotación que tienen centroide en mpio a 2017"
+               label var fecha_cent_oil_tea "Fecha más temprana de evidencia de área en TEA que tienen centroide en mpio a 2017"
+          }
+          
+     sa "${oil}\`x'nt_oil_clean.dta", replace
+     
+}
+
+
+
 
 
 
