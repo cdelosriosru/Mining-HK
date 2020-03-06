@@ -8,7 +8,7 @@
       * PATHS
       
 global data "C:/Users/camilodel/Desktop/IDB/MINING-HK/DATA"
-global tit_min "${data}/Mineria/titulos_colombia/harm/full_dta"
+global tit_min "${data}/Mineria/titulos_colombia/harm"
 global geo "${data}/Mineria/geo/harm"
 global oil "${data}/Petroleo/harm"
 
@@ -36,7 +36,7 @@ foreach z in ce i{
           keep codmpio fecha_`z'nt_t_`x' n_`z'nt*
           sort codmpio fecha_`z'nt_t_`x'
           collapse (min) fecha_`z'nt_t_`x' (sum) n_`z'nt_t_`x', by(codmpio)
-          gen `z'nt_t_`x"=1
+          gen `z'nt_t_`x'=1
 
           if "`z'"=="i"{
                label var fecha_`z'nt_t_`x' "Fecha más temprana de evidencia de títulos de oro que intersecan al mpio según shp de 20 `x'"
@@ -60,7 +60,7 @@ foreach z in ce i{
           gen fecha_`z'nt_s_`x'=substr(datec,1,4)
           destring fecha_`z'nt_s_`x', replace
           gen n_`z'nt_s_`x'=1
-          keep codmpio fecha_`z'nt_s_`x' int*
+          keep codmpio fecha_`z'nt_s_`x' *`z'nt*
           sort codmpio fecha_`z'nt_s_`x'
           collapse (min) fecha_`z'nt_s_`x' (sum) n_`z'nt_s_`x', by(codmpio)
           gen `z'nt_s_`x'=1
@@ -186,17 +186,18 @@ foreach x in ce i {
 use "${oil}/area_mpios_oil.dta", replace
 decode admin2Pcod, gen(muni)
 gen codmpio=substr(muni,3,.)
-keep codmpio a_inter_pc
+rename a_inter_pc a_inter_pc_oil
+keep codmpio a_inter_pc*
 sort codmpio
 collapse (sum) a_inter_pc, by(codmpio)
 sa "${oil}/area_oil_clean.dta", replace
 
            *** MERGE DATA ***
 
-use "${tit_min}/int_oil_clean.dta", clear
-merge 1:1 codmpio using "${tit_min}/cent_oil_clean.dta"
+use "${oil}/int_oil_clean.dta", clear
+merge 1:1 codmpio using "${oil}/cent_oil_clean.dta"
 rename _merge mer_ce_geo
-merge 1:1 codmpio using "${tit_min}/area_oil_clean.dta"
+merge 1:1 codmpio using "${oil}/area_oil_clean.dta"
 rename _merge mer_are_geo
 
 sa "${oil}/full_oil.dta", replace
@@ -246,7 +247,8 @@ foreach x in ce i {
 use "${geo}/area_mpios_geo.dta", replace
 decode admin2Pcod, gen(muni)
 gen codmpio=substr(muni,3,.)
-keep codmpio a_inter_pc
+rename a_inter_pc a_inter_pc_geo
+keep codmpio a_inter_pc*
 sort codmpio
 collapse (sum) a_inter_pc, by(codmpio)
 sa "${geo}/area_geo_clean.dta", replace
