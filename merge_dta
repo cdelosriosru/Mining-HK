@@ -83,16 +83,16 @@ foreach z in ce i{
     
  *** Merge the Data ***
 
-use "${tit_min}/int_mpios_oro_t_08.dta", clear
+use "${tit_min}/int_clean_t_08.dta", clear
 
 foreach x in int cent{
      foreach y in t s{
           foreach z in 08 10 17{          
-          merge 1:1 codmpio using "${tit_min}/`x'_mpios_oro_`y'_`z'.dta"
-          rename _merge mer_`x'`y'`z'
+               merge 1:1 codmpio using "${tit_min}/`x'_clean_`y'_`z'.dta"
+               rename _merge mer_`x'`y'`z'
           }
-       }
-   }
+     }
+}
 
 sa "${tit_min}/full_t_s.dta", replace
 
@@ -109,7 +109,7 @@ sa "${data}/Mineria/harm/t_s_jac.dta", replace  // save data that has titles, so
                OIl TITLES
 *******************************************/
 
-          *** THE LOOP ***
+          *** CENTROIDES E INTESECCIONES ***
 foreach x in ce i {
 
      use "${oil}/`x'nt_mpios_oil.dta"
@@ -181,17 +181,85 @@ foreach x in ce i {
 }
 
 
+          *** ÁREAS ***
+          
+use "${oil}/area_mpios_oil.dta", replace
+decode admin2Pcod, gen(muni)
+gen codmpio=substr(muni,3,.)
+keep codmpio a_inter_pc
+sort codmpio
+collapse (sum) a_inter_pc, by(codmpio)
+sa "${oil}/area_oil_clean.dta", replace
 
+           *** MERGE DATA ***
 
+use "${tit_min}/int_oil_clean.dta", clear
+merge 1:1 codmpio using "${tit_min}/cent_oil_clean.dta"
+rename _merge mer_ce_geo
+merge 1:1 codmpio using "${tit_min}/area_oil_clean.dta"
+rename _merge mer_are_geo
+
+sa "${oil}/full_oil.dta", replace
 
 
 /*******************************************
                GEO ANOMALIES
 *******************************************/
 
+     *** CENTROIDES E INTERSECCIONES ***
+foreach x in ce i {
 
-blaaaa
+     use "${geo}/`x'nt_mpios_geo.dta", replace
 
+     gen potencial_a=1 if POTENCIAL==1
+     recode potencial_a(.=0)
+     gen potencial_m=2 if POTENCIAL==3
+     recode potencial_m(.=0)
+     gen potencial_b=1 if POTENCIAL==2
+     recode potencial_b(.=0)
+
+     decode admin2Pcod, gen(muni)
+     gen codmpio=substr(muni,3,.)
+
+     keep potencial_* codmpio
+
+     collapse (max) potencial*, by(codmpio)
+
+     if "`x'"=="i"{
+          label var potencial_a "Hay areas hasta con potencial aurífero alto que intersecan al mpio"
+          label var potencial_m "Hay areas hasta con potencial aurífero medio que intersecan al mpio"
+          label var potencial_b "Hay areas hasta con potencial aurífero bajo que intersecan al mpio"
+     }
+
+     else {
+          label var potencial_a "Hay areas hasta con potencial aurífero alto que tienen centroide en mpio"
+          label var potencial_m "Hay areas hasta con potencial aurífero medio que tienen centroide en mpio"
+          label var potencial_b "Hay areas hasta con potencial aurífero bajo que tienen centroide en mpio"
+     }
+     sa "${geo}/`x'nt_geo_clean.dta", replace
+}
+
+
+
+      *** ÁREAS ***
+          
+use "${geo}/area_mpios_geo.dta", replace
+decode admin2Pcod, gen(muni)
+gen codmpio=substr(muni,3,.)
+keep codmpio a_inter_pc
+sort codmpio
+collapse (sum) a_inter_pc, by(codmpio)
+sa "${geo}/area_geo_clean.dta", replace
+
+           *** MERGE DATA ***
+
+use "${geo}/int_geo_clean.dta", clear
+merge 1:1 codmpio using "${geo}/cent_geo_clean.dta"
+rename _merge mer_ce_geo
+merge 1:1 codmpio using "${geo}/area_geo_clean.dta"
+rename _merge mer_are_geo
+
+sa "${geo}/full_geo.dta", replace
 
 
 
