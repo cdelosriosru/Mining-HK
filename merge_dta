@@ -30,6 +30,8 @@ foreach z in ce i{
           decode admin2Pcod, gen(muni)
           decode FECHA_INSC, gen(datec)
           gen codmpio=substr(muni,3,.)
+          destring codmpio, replace
+          tostring codmpio, replace
           gen fecha_`z'nt_t_`x'=substr(datec,1,4)
           destring fecha_`z'nt_t_`x', replace
           gen n_`z'nt_t_`x'=1
@@ -57,6 +59,8 @@ foreach z in ce i{
           decode admin2Pcod, gen(muni)
           decode FECHA_RADI, gen(datec)
           gen codmpio=substr(muni,3,.)
+          destring codmpio, replace
+          tostring codmpio, replace
           gen fecha_`z'nt_s_`x'=substr(datec,1,4)
           destring fecha_`z'nt_s_`x', replace
           gen n_`z'nt_s_`x'=1
@@ -125,6 +129,8 @@ foreach x in ce i {
      decode FECHA_FIRM, gen(datec)
 
      gen codmpio=substr(muni,3,.)
+     destring codmpio, replace
+     tostring codmpio, replace
 
      gen fecha_`x'nt_oil=substr(datec,1,4)  
 
@@ -186,6 +192,8 @@ foreach x in ce i {
 use "${oil}/area_mpios_oil.dta", replace
 decode admin2Pcod, gen(muni)
 gen codmpio=substr(muni,3,.)
+destring codmpio, replace
+tostring codmpio, replace
 rename a_inter_pc a_inter_pc_oil
 keep codmpio a_inter_pc*
 sort codmpio
@@ -221,7 +229,9 @@ foreach x in ce i {
 
      decode admin2Pcod, gen(muni)
      gen codmpio=substr(muni,3,.)
-
+     destring codmpio, replace
+     tostring codmpio, replace
+     
      keep potencial_* codmpio
 
      collapse (max) potencial*, by(codmpio)
@@ -247,6 +257,8 @@ foreach x in ce i {
 use "${geo}/area_mpios_geo.dta", replace
 decode admin2Pcod, gen(muni)
 gen codmpio=substr(muni,3,.)
+destring codmpio, replace
+tostring codmpio, replace
 rename a_inter_pc a_inter_pc_geo
 keep codmpio a_inter_pc*
 sort codmpio
