@@ -165,11 +165,11 @@ foreach x in ce i {
 
      collapse (min) fecha* (sum) n_*, by(codmpio)
 
-     gen prod_`x'nt = prod_`x'nt/prod_`x'nt
+     gen prod_`x'nt = n_prod_`x'nt/n_prod_`x'nt
      recode prod_`x'nt(.=0)
-     gen expl_`x'nt = expl_`x'nt/expl_`x'nt
+     gen expl_`x'nt = n_expl_`x'nt/n_expl_`x'nt
      recode expl_`x'nt(.=0)
-     gen tea_`x'nt = tea_`x'nt/tea_`x'nt
+     gen tea_`x'nt = n_tea_`x'nt/n_tea_`x'nt
      recode tea_`x'nt(.=0)
 
      gen `x'nt_oil= 1 
