@@ -262,4 +262,23 @@ rename _merge mer_are_geo
 sa "${geo}/full_geo.dta", replace
 
 
+/*******************************************
+              MERGE ALL
+*******************************************/
+
+use "${data}/Mineria/harm/t_s_jac.dta", clear
+merge 1:1 codmpio using "${oil}/full_oil.dta"
+rename _merge mer_oil
+merge 1:1 codmpio using "${geo}/full_geo.dta"
+rename _merge mer_geo
+
+sa "${data}/full-harm/t_s_jac_oil_geo.dta", replace
+
+
+
+
+
+
+
+
 
