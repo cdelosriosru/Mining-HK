@@ -11,7 +11,7 @@ global data "C:/Users/camilodel/Desktop/IDB/MINING-HK/DATA"
 global tit_min "${data}/Mineria/titulos_colombia/harm"
 global geo "${data}/Mineria/geo/harm"
 global oil "${data}/Petroleo/harm"
-
+global agua "${data}/Agua/oferta_Colombia/harm"
 
 /*******************************************
           MINING TITLES & SOLICITUDES
@@ -277,7 +277,7 @@ sa "${geo}/full_geo.dta", replace
 
 
 /*******************************************
-              MERGE ALL
+            MERGE ALL OIL, MINING, GEO. 
 *******************************************/
 
 use "${data}/Mineria/harm/t_s_jac.dta", clear
@@ -288,11 +288,13 @@ rename _merge mer_geo
 
 sa "${data}/full-harm/t_s_jac_oil_geo.dta", replace
 
+/*******************************************
+            MERGE WITH WATER 
+*******************************************/
 
-
-
-
-
+merge 1:1 codmpio using "${agua}/agua_ideam.dta", gen(mer_agua)
+compress
+sa "${data}/full-harm/water_mine.dta", replace
 
 
 
