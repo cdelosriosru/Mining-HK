@@ -1,0 +1,64 @@
+**************************************************************************************
+* PROJECT :     	Mining - HK
+* AUTHOR :				Camilo De Los Rios
+* PURPOSE :				Estimations and descriptive data for HK paper
+* SOURCE :        GitHub
+**************************************************************************************
+
+      * PATHS
+      
+global data "C:/Users/camilodel/Desktop/IDB/MINING-HK/DATA"
+global tit_min "${data}/Mineria/titulos_colombia/harm"
+global geo "${data}/Mineria/geo/harm"
+global oil "${data}/Petroleo/harm"
+global agua "${data}/Agua/oferta_Colombia/harm"
+
+/*******************************************
+          clean and prepare data set 
+*******************************************/
+
+
+use "${data}/full-harm/water_mine.dta", clear
+
+destring fecha*, replace
+recode n_*(.=0)
+
+foreach x in int cent{
+  foreach y in s t{
+    foreach z in 08 10 17{
+      recode `x'_`y'_`z' (.=0)
+    }
+  }
+}
+
+foreach x in int cent{
+  foreach y in prod expl tea{
+      recode `y'_`x' (.=0)
+      recode n_`y'_`x' (.=0)
+  }
+}
+
+
+foreach x in n_s_jacome area_jacome jacome potencial_a potencial_m potencial_b a_inter_pc_geo a_inter_pc_oil{
+  recode `x' (.=0)
+}
+
+
+
+
+
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
