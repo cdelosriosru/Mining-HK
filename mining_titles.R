@@ -596,9 +596,85 @@ write.dta(mpios_oro_s_17_dta, "cens_mpios_oro_s_17.dta")
     
     
     
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------       
+    #             now for the abnormal ones. 
     
-    
-    
+#-------------------------2014---------------------------
+
+setwd(mineria) 
+
+
+O1_14 <- readOGR(dsn="raw/2014", layer="T14_1") 
+O2_14 <- readOGR(dsn="raw/2014", layer="T14_2") 
+
+keep_1 <- c("MINERALES","FECHA_INSC")
+keep_2 <- c("MINERALES","FECHA_RADI")
+
+O1_14 <- O1_14[,(names(O1_14) %in% keep_1)]
+O1_14$ID<- seq.int(nrow(O1_14))
+
+O2_14 <- O2_14[,(names(O2_14) %in% keep_2)]
+O2_14$ID<- seq.int(nrow(O2_14))
+
+
+O1_14 <- O1_14[grepl('ORO',O1_14$MINERALES),] # extract only the relevant info. 
+writeOGR(O1_14, dsn="harm/2014", layer="O1_14", driver ="ESRI Shapefile", overwrite_layer = T)
+O1_14 <- readOGR(dsn="harm/2014", layer="O1_14") 
+O1_14$a_t_km2<-area(O1_14)/1000000 
+O1_14<-spTransform(O1_14, crs(mpios)) 
+
+
+O2_14 <- O2_14[grepl('ORO',O2_14$MINERALES),] # extract only the relevant info. 
+writeOGR(O2_14, dsn="harm/2014", layer="O2_14", driver ="ESRI Shapefile", overwrite_layer = T)
+O2_14 <- readOGR(dsn="harm/2014", layer="O2_14") 
+O2_14$a_t_km2<-area(O2_14)/1000000 
+O2_14<-spTransform(O2_14, crs(mpios)) 
+
+
+
+#------BASICS--------- 
+# Basic convertions that I need for more than one task. 
+mpios<-clgeo_Clean(mpios)
+
+O1_14 <-clgeo_Clean(O1_14)
+O2_14 <-clgeo_Clean(O2_14)
+
+
+mpios_st<-st_as_sf(mpios)
+
+O1_14_st<-st_as_sf(O1_14)
+O2_14_st<-st_as_sf(O2_14)
+
+
+# set the folder where I want everything to be saved. 
+setwd(paste(mineria,'/harm',sep="")) 
+
+#------INTERSECTION------
+
+mpios_oro_O1_14<-raster::intersect(O1_14,mpios)
+mpios_oro_O1_14<-as.data.frame(mpios_oro_O1_14)
+write.dta(mpios_oro_O1_14, "int_mpios_oro_O1_14.dta")
+
+mpios_oro_O2_14<-raster::intersect(O2_14,mpios)
+mpios_oro_O2_14<-as.data.frame(mpios_oro_O2_14)
+write.dta(mpios_oro_O2_14, "int_mpios_oro_O2_14.dta")
+
+#----CENTROIDS----
+
+c_O1_14<-SpatialPointsDataFrame(gCentroid(O1_14, byid=TRUE), O1_14@data, match.ID = FALSE) 
+c_O1_14_st<-st_as_sf(c_O1_14)
+mpios_oro_O1_14_st<-st_intersection(mpios_st,c_O1_14_st) 
+mpios_oro_O1_14<-as(mpios_oro_O1_14_st,'Spatial')
+mpios_oro_O1_14_dta<- as.data.frame(mpios_oro_O1_14, xy=TRUE, na.rm=TRUE)
+write.dta(mpios_oro_O1_14_dta, "cent_mpios_oro_O1_14.dta") 
+
+c_O2_14<-SpatialPointsDataFrame(gCentroid(O2_14, byid=TRUE), O2_14@data, match.ID = FALSE) 
+c_O2_14_st<-st_as_sf(c_O2_14)
+mpios_oro_O2_14_st<-st_intersection(mpios_st,c_O2_14_st) 
+mpios_oro_O2_14<-as(mpios_oro_O2_14_st,'Spatial')
+mpios_oro_O2_14_dta<- as.data.frame(mpios_oro_O2_14, xy=TRUE, na.rm=TRUE)
+write.dta(mpios_oro_O2_14_dta, "cent_mpios_oro_O2_14.dta") 
     
     
     
