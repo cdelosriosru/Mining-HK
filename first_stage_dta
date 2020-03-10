@@ -44,7 +44,7 @@ foreach x in n_s_jacome area_jacome jacome potencial_a potencial_m potencial_b a
   recode `x' (.=0)
 }
 
-drop *mer* decondname mpio2 m_jacome
+drop *mer* secondname mpio2 m_jacome
 
 /*******************************************
          Start resilience analysis
@@ -66,7 +66,7 @@ foreach k in t s{
      foreach y in ce i{
           foreach z in 08 10 17{
                forvalues x = 2004(1)2011{
-                    sum oro`x' if oro!=0 & `y'nt_`k'_`z'==1
+                    sum oro`x' if oro`x'!=0 & `y'nt_`k'_`z'==1
                     scalar a=r(N)
                     sum oro`x' if oro`x'!=0
                     scalar b=r(N)
@@ -99,9 +99,9 @@ outtable using "analysis/sum_prod_other", mat(A) cap("Resilencia en producción 
 forvalues x=2005(1)2018{
      local y=`x'-1
      forvalues z=2004(1)`y'{
-          sum oro`x' if oro!=0 & oro`z'!=0
+          sum oro`x' if oro`x'!=0 & oro`z'!=0
           scalar a=r(N)
-          sum oro`x' if oro!=0
+          sum oro`x' if oro`x'!=0
           scalar b=r(N)
           scalar j_`x'_`z'=a/b
           scalar n_`x'=r(N)
