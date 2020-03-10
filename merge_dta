@@ -297,4 +297,23 @@ compress
 sa "${data}/full-harm/water_mine.dta", replace
 
 
+/*******************************************
+            MERGE WITH PRODUCTION 
+*******************************************/
+
+merge 1:1 codmpio using "${data}/Mineria/prod_wide.dta"
+compress 
+sa "${data}/full-harm/water_mine_prod.dta", replace
+
+
+
+
+
+
+
+
+
+
+
+
 
