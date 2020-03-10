@@ -96,7 +96,7 @@ outtable using "analysis/sum_prod_other", mat(A) cap("Resilencia en producción 
 
 * Production itself
 
-forvalues x=2005(1)2018{
+forvalues x=2005(1)2011{
      local y=`x'-1
      forvalues z=2004(1)`y'{
           sum oro`x' if oro`x'!=0 & oro`z'!=0
@@ -147,7 +147,7 @@ foreach k in t s{
                sum `y'nt_`k'_`z' if `y'nt_`k'_`z'==1
                scalar b=r(N)
                scalar j_`y'_`k'_`z'=a/b
-               scalar n_`z'=(N)
+               scalar n_`z'=r(N)
           }
      }
 }
@@ -155,39 +155,15 @@ foreach k in t s{
 
 
 matrix define A=(n_08 , n_10 , n_17 \ ///
-
 j_i_t_08 , j_i_t_10 , j_i_t_17 \ ///
-
 . , j_i_t_10_08 , j_i_t_17_08 \ ///
 . , . , j_i_t_17_10 \ ///
-
 . , j_ce_t_10_08 , j_ce_t_17_08 \ ///
 . , . , j_ce_t_17_10 \ ///
-
 . , j_i_s_10_08 , j_i_s_17_08 \ ///
 . , . , j_i_s_17_10 \ ///
-
 . , j_ce_s_10_08 , j_ce_s_17_08 \ ///
 . , . , j_ce_s_17_10)
 
 
 outtable using "analysis/sum_tit_tit", mat(A) cap("Resilencia en titulación de oro vs titulación años pasados y Jacome")
-
-
-
-
-
-
-
-
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
