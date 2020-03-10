@@ -1,8 +1,8 @@
 **************************************************************************************
 * PROJECT :     	Mining - HK
-* AUTHOR :				Camilo De Los Rios
-* PURPOSE :				Estimations and descriptive data for HK paper
-* SOURCE :        GitHub
+* AUTHOR :		Camilo De Los Rios
+* PURPOSE :		Estimations and descriptive data for HK paper
+* SOURCE :          GitHub
 **************************************************************************************
 
       * PATHS
@@ -42,6 +42,88 @@ foreach x in int cent{
 foreach x in n_s_jacome area_jacome jacome potencial_a potencial_m potencial_b a_inter_pc_geo a_inter_pc_oil{
   recode `x' (.=0)
 }
+
+drop *mer* decondname mpio2 m_jacome
+
+/*******************************************
+         Start resilience analysis
+*******************************************/
+
+* Production and titles, solicitudes and Jacome
+
+forvalues x = 2004(1)2011{
+     sum oro`x' if oro!=0 & jacome==1
+     scalar a=r(N)
+     sum oro`x' if oro!=0
+     scalar b=r(N)
+     scalar j`x'=a/b
+}
+
+foreach k in t s{
+     foreach y in ce i{
+          foreach z in 08 10 17{
+               forvalues x = 2004(1)2011{
+                    sum oro`x' if oro!=0 & `y'_`k'nt_`z'==1
+                    scalar a=r(N)
+                    sum oro`x' if oro!=0
+                    scalar b=r(N)
+                    scalar j_`y'_`k'_`z'_`x'=a/b
+               }
+          }
+     }
+}
+matrix A = (j2004,j2005,j2006,j2007,j2008,j2009,j2010,j2011 \ ///
+j_i_t_08_2004, j_i_t_08_2005, j_i_t_08_2006, j_i_t_08_2007, j_i_t_08_2008, j_i_t_08_2009, j_i_t_08_2010, j_i_t_08_2011 \ ///
+j_i_t_10_2004, j_i_t_10_2005, j_i_t_10_2006, j_i_t_10_2007, j_i_t_10_2008, j_i_t_10_2009, j_i_t_10_2010, j_i_t_10_2011 \ ///
+j_i_t_17_2004, j_i_t_17_2005, j_i_t_17_2006, j_i_t_17_2007, j_i_t_17_2008, j_i_t_17_2009, j_i_t_17_2010, j_i_t_17_2011 \ ///
+j_ce_t_08_2004, j_ce_t_08_2005, j_ce_t_08_2006, j_ce_t_08_2007, j_ce_t_08_2008, j_ce_t_08_2009, j_ce_t_08_2010, j_ce_t_08_2011 \ ///
+j_ce_t_10_2004, j_ce_t_10_2005, j_ce_t_10_2006, j_ce_t_10_2007, j_ce_t_10_2008, j_ce_t_10_2009, j_ce_t_10_2010, j_ce_t_10_2011 \ ///
+j_ce_t_17_2004, j_ce_t_17_2005, j_ce_t_17_2006, j_ce_t_17_2007, j_ce_t_17_2008, j_ce_t_17_2009, j_ce_t_17_2010, j_ce_t_17_2011 \ ///
+j_i_s_08_2004, j_i_s_08_2005, j_i_s_08_2006, j_i_s_08_2007, j_i_s_08_2008, j_i_s_08_2009, j_i_s_08_2010, j_i_s_08_2011 \ ///
+j_i_s_10_2004, j_i_s_10_2005, j_i_s_10_2006, j_i_s_10_2007, j_i_s_10_2008, j_i_s_10_2009, j_i_s_10_2010, j_i_s_10_2011 \ ///
+j_i_s_17_2004, j_i_s_17_2005, j_i_s_17_2006, j_i_s_17_2007, j_i_s_17_2008, j_i_s_17_2009, j_i_s_17_2010, j_i_s_17_2011 \ ///
+j_ce_s_08_2004, j_ce_s_08_2005, j_ce_s_08_2006, j_ce_s_08_2007, j_ce_s_08_2008, j_ce_s_08_2009, j_ce_s_08_2010, j_ce_s_08_2011 \ ///
+j_ce_s_10_2004, j_ce_s_10_2005, j_ce_s_10_2006, j_ce_s_10_2007, j_ce_s_10_2008, j_ce_s_10_2009, j_ce_s_10_2010, j_ce_s_10_2011 \ ///
+j_ce_s_17_2004, j_ce_s_17_2005, j_ce_s_17_2006, j_ce_s_17_2007, j_ce_s_17_2008, j_ce_s_17_2009, j_ce_s_17_2010, j_ce_s_17_2011 )
+
+matrix rownames A = Jacome y08 y10 y17 y08 y10 y17 y08 y10 y17 y08 y10 y17
+matrix colnames A =  p2004 p2005 p2006 p2007 p2008 p2009 p2010 p2011 
+
+outtable using "analysis/sum_prod_other", mat(A) cap("Resilencia en producción de oro vs otros")
+
+* Production itself
+
+forvalues x=2005(1)2018{
+     local y=`x'-1
+     forvalues z=2004(1)`y'{
+          sum oro`x' if oro!=0 & oro`z'!=0
+          scalar a=r(N)
+          sum oro`x' if oro!=0
+          scalar b=r(N)
+          scalar j_`x'_`z'=a/b
+     }
+}
+
+matrix A = (j_2005_2004, j_2006_2004, j_2007_2004, j_2008_2004, j_2009_2004, j_2010_2004, j_2011_2004 \ ///
+., j_2006_2005, j_2007_2005, j_2008_2005, j_2009_2005, j_2010_2005, j_2011_2005 \ ///
+., ., j_2007_2006, j_2008_2006, j_2009_2006, j_2010_2006, j_2011_2006 \ ///
+., ., ., j_2008_2007, j_2009_2007, j_2010_2007, j_2011_2007 \ ///
+., ., ., ., j_2009_2008, j_2010_2008, j_2011_2008 \ ///
+., ., ., ., ., j_2010_2009, j_2011_2009 \ ///
+., ., ., ., ., ., j_2011_2010)
+
+matrix colnames A =  p2005 p2006 p2007 p2008 p2009 p2010 p2011 
+matrix rownames A =  p2005 p2006 p2007 p2008 p2009 p2010 p2011
+
+outtable using "analysis/sum_prod_prod", mat(A) cap("Resilencia en producción de oro vs Producción años pasados")
+
+
+
+
+
+
+
+
 
 
 
