@@ -8,6 +8,7 @@
       * PATHS
       
 global data "C:/Users/camilodel/Desktop/IDB/MINING-HK/DATA"
+global resultados "C:/Users/camilodel/Desktop/IDB/MINING-HK/RESULTS"
 global tit_min "${data}/Mineria/titulos_colombia/harm"
 global geo "${data}/Mineria/geo/harm"
 global oil "${data}/Petroleo/harm"
@@ -18,7 +19,7 @@ global agua "${data}/Agua/oferta_Colombia/harm"
 *******************************************/
 
 
-use "${data}/full-harm/water_mine.dta", clear
+use "${data}/full-harm/water_mine_prod.dta", clear
 
 destring fecha*, replace
 recode n_*(.=0)
@@ -49,12 +50,14 @@ drop *mer* decondname mpio2 m_jacome
          Start resilience analysis
 *******************************************/
 
+cd "${resultados}"
+
 * Production and titles, solicitudes and Jacome
 
 forvalues x = 2004(1)2011{
-     sum oro`x' if oro!=0 & jacome==1
+     sum oro`x' if oro`x'!=0 & jacome==1
      scalar a=r(N)
-     sum oro`x' if oro!=0
+     sum oro`x' if oro`x'!=0
      scalar b=r(N)
      scalar j`x'=a/b
 }
@@ -63,9 +66,9 @@ foreach k in t s{
      foreach y in ce i{
           foreach z in 08 10 17{
                forvalues x = 2004(1)2011{
-                    sum oro`x' if oro!=0 & `y'_`k'nt_`z'==1
+                    sum oro`x' if oro!=0 & `y'nt_`k'_`z'==1
                     scalar a=r(N)
-                    sum oro`x' if oro!=0
+                    sum oro`x' if oro`x'!=0
                     scalar b=r(N)
                     scalar j_`y'_`k'_`z'_`x'=a/b
                }
@@ -101,10 +104,12 @@ forvalues x=2005(1)2018{
           sum oro`x' if oro!=0
           scalar b=r(N)
           scalar j_`x'_`z'=a/b
+          scalar n_`x'=r(N)
      }
 }
 
-matrix A = (j_2005_2004, j_2006_2004, j_2007_2004, j_2008_2004, j_2009_2004, j_2010_2004, j_2011_2004 \ ///
+matrix A = (n_2005, n_2006, n_2007, n_2008, n_2009, n_2010, n_2011 \ ///
+j_2005_2004, j_2006_2004, j_2007_2004, j_2008_2004, j_2009_2004, j_2010_2004, j_2011_2004 \ ///
 ., j_2006_2005, j_2007_2005, j_2008_2005, j_2009_2005, j_2010_2005, j_2011_2005 \ ///
 ., ., j_2007_2006, j_2008_2006, j_2009_2006, j_2010_2006, j_2011_2006 \ ///
 ., ., ., j_2008_2007, j_2009_2007, j_2010_2007, j_2011_2007 \ ///
@@ -113,18 +118,60 @@ matrix A = (j_2005_2004, j_2006_2004, j_2007_2004, j_2008_2004, j_2009_2004, j_2
 ., ., ., ., ., ., j_2011_2010)
 
 matrix colnames A =  p2005 p2006 p2007 p2008 p2009 p2010 p2011 
-matrix rownames A =  p2005 p2006 p2007 p2008 p2009 p2010 p2011
+matrix rownames A =  observaciones p2005 p2006 p2007 p2008 p2009 p2010 p2011
 
 outtable using "analysis/sum_prod_prod", mat(A) cap("Resilencia en producción de oro vs Producción años pasados")
 
+*now the titles and solicitudes vs themselves
+
+
+foreach k in t s{
+     foreach y in ce i{
+          foreach z in 08 10 17{
+               foreach w in 08 10 17{
+                    sum `y'nt_`k'_`z' if `y'nt_`k'_`z'==1 &  `y'nt_`k'_`w'==1
+                    scalar a=r(N)
+                    sum `y'nt_`k'_`z' if `y'nt_`k'_`z'==1
+                    scalar b=r(N)
+                    scalar j_`y'_`k'_`z'_`w'=a/b
+               }
+          }
+     }
+}
+
+foreach k in t s{
+     foreach y in ce i{
+          foreach z in 08 10 17{
+               sum `y'nt_`k'_`z' if `y'nt_`k'_`z'==1 &  jacome==1
+               scalar a=r(N)
+               sum `y'nt_`k'_`z' if `y'nt_`k'_`z'==1
+               scalar b=r(N)
+               scalar j_`y'_`k'_`z'=a/b
+               scalar n_`z'=(N)
+          }
+     }
+}
 
 
 
+matrix define A=(n_08 , n_10 , n_17 \ ///
+
+j_i_t_08 , j_i_t_10 , j_i_t_17 \ ///
+
+. , j_i_t_10_08 , j_i_t_17_08 \ ///
+. , . , j_i_t_17_10 \ ///
+
+. , j_ce_t_10_08 , j_ce_t_17_08 \ ///
+. , . , j_ce_t_17_10 \ ///
+
+. , j_i_s_10_08 , j_i_s_17_08 \ ///
+. , . , j_i_s_17_10 \ ///
+
+. , j_ce_s_10_08 , j_ce_s_17_08 \ ///
+. , . , j_ce_s_17_10)
 
 
-
-
-
+outtable using "analysis/sum_tit_tit", mat(A) cap("Resilencia en titulación de oro vs titulación años pasados y Jacome")
 
 
 
