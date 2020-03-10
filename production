@@ -37,6 +37,12 @@ replace mpio="PEÑOL" if mpio=="PEÐOL"
 
 
 merge m:1 dpto mpio using "${inst}/cod_DANE.dta"
+drop if _merge!=3
+drop _merge
+collapse (sum) oro, by (codmpio year)
+reshape wide oro, i(codmpio) j(year)
+recode oro*(.=0)
+sa "${tit_min}/prod_wide.dta"
 
 
 
