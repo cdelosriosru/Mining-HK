@@ -92,7 +92,8 @@ j_ce_s_17_2004, j_ce_s_17_2005, j_ce_s_17_2006, j_ce_s_17_2007, j_ce_s_17_2008, 
 matrix rownames A = Jacome y08 y10 y17 y08 y10 y17 y08 y10 y17 y08 y10 y17
 matrix colnames A =  p2004 p2005 p2006 p2007 p2008 p2009 p2010 p2011 
 
-outtable using "analysis/sum_prod_other", mat(A) cap("Resilencia en producción de oro vs otros")
+outtable using "analysis/sum_prod_other", mat(A) cap("Resilencia en producción de oro vs otros") f(%9.2f) replace
+
 
 * Production itself
 
@@ -120,7 +121,7 @@ j_2005_2004, j_2006_2004, j_2007_2004, j_2008_2004, j_2009_2004, j_2010_2004, j_
 matrix colnames A =  p2005 p2006 p2007 p2008 p2009 p2010 p2011 
 matrix rownames A =  observaciones p2005 p2006 p2007 p2008 p2009 p2010 p2011
 
-outtable using "analysis/sum_prod_prod", mat(A) cap("Resilencia en producción de oro vs Producción años pasados")
+outtable using "analysis/sum_prod_prod", mat(A) cap("Resilencia en producción de oro vs Producción años pasados") f(%9.2f) replace
 
 *now the titles and solicitudes vs themselves
 
@@ -166,4 +167,4 @@ j_i_t_08 , j_i_t_10 , j_i_t_17 \ ///
 . , . , j_ce_s_17_10)
 
 
-outtable using "analysis/sum_tit_tit", mat(A) cap("Resilencia en titulación de oro vs titulación años pasados y Jacome")
+outtable using "analysis/sum_tit_tit", mat(A) cap("Resilencia en titulación de oro vs titulación años pasados y Jacome") f(%9.2f) replace
