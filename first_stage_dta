@@ -184,14 +184,14 @@ cd "${resultados}"
 sum jacome if jacome==1
 scalar jac=r(N)
 forvalues x = 2004(1)2011{
-     sum oro`x' if oro`x'==1 & jacome==1
+     sum oro`x' if oro`x'>0 & jacome==1
      scalar a=r(N)
      scalar y`x'=a/jac
 }
 forvalues x = 2004(1)2011{
-     sum oro`x' if oro`x'==1 & jacome==0
+     sum oro`x' if oro`x'>0 & jacome==0
      scalar a=r(N)
-     sum oro`x' if oro`x'==1
+     sum oro`x' if oro`x'>0
      scalar b=r(N)
      scalar n`x'=a/b
      scalar n_`x'=r(N)
@@ -211,9 +211,9 @@ outtable using "analysis/prod_jac", mat(A) cap("resilencia producción vs Jacome
 forvalues x=2005(1)2011{
      local y=`x'-1
      forvalues z=2004(1)`y'{
-          sum oro`x' if oro`x'==1 & oro`z'==1
+          sum oro`x' if oro`x'>0 & oro`z'>0
           scalar a=r(N)
-          sum oro`x' if oro`z'==1
+          sum oro`x' if oro`z>0
           scalar b=r(N)
           scalar j_`x'_`z'=a/b
           scalar n_`x'=r(N)
@@ -238,9 +238,9 @@ outtable using "analysis/prod_prod_y", mat(A) cap("Resilencia en producción de 
 forvalues x=2005(1)2011{
      local y=`x'-1
      forvalues z=2004(1)`y'{
-          sum oro`x' if oro`x'==1 & oro`z'==0
+          sum oro`x' if oro`x'>0 & oro`z'>0
           scalar a=r(N)
-          sum oro`x' if oro`x'==1
+          sum oro`x' if oro`x'>0
           scalar b=r(N)
           scalar j_`x'_`z'=a/b
           scalar n_`x'=r(N)
