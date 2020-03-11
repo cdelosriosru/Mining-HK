@@ -213,7 +213,7 @@ forvalues x=2005(1)2011{
      forvalues z=2004(1)`y'{
           sum oro`x' if oro`x'>0 & oro`z'>0
           scalar a=r(N)
-          sum oro`x' if oro`z>0
+          sum oro`x' if oro`z'>0
           scalar b=r(N)
           scalar j_`x'_`z'=a/b
           scalar n_`x'=r(N)
@@ -360,6 +360,4 @@ matrix define A=( j_i_t_10_08 , j_i_t_17_08 \ ///
  matrix rownames A  = yit08 yit10 ycet08 ycet10 yis08 yis10 yces08 yces10
 
 outtable using "analysis/tit_sol_themselves2", mat(A) cap("resilencia titulos/solicitudes vs themselves. definiciones 5 y 6") f(%9.2f) replace
-
-
 
