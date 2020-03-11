@@ -55,7 +55,7 @@ drop *mer* secondname mpio2 m_jacome
          
          code at the end, starts with :THE REAL THING
 *******************************************/
-
+/*
 cd "${resultados}"
 
 * Production and titles, solicitudes and Jacome
@@ -174,7 +174,7 @@ j_i_t_08 , j_i_t_10 , j_i_t_17 \ ///
 
 
 outtable using "analysis/sum_tit_tit", mat(A) cap("Resilencia en titulación de oro vs titulación años pasados y Jacome") f(%9.2f) replace
-
+*/
 
 /*******************************************
           THE REAL THING
