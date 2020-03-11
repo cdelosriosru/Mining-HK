@@ -238,7 +238,7 @@ outtable using "analysis/prod_prod_y", mat(A) cap("Resilencia en producción de 
 forvalues x=2005(1)2011{
      local y=`x'-1
      forvalues z=2004(1)`y'{
-          sum oro`x' if oro`x'>0 & oro`z'>0
+          sum oro`x' if oro`x'>0 & oro`z'==0
           scalar a=r(N)
           sum oro`x' if oro`x'>0
           scalar b=r(N)
