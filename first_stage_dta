@@ -200,10 +200,10 @@ matrix A = ( y2004, y2005, y2006, y2007, y2008, y2009, y2010, y2011 \ ///
 n2004, n2005, n2006, n2007, n2008, n2009, n2010, n2011 \ ///
 n_2004, n_2005, n_2006, n_2007, n_2008, n_2009, n_2010, n_2011 )
 
-matrix A colnames = 2004 2005 2006 2007 2008 2009 2010 2011
-matrix A row names = y  n observations
+matrix colnames A  = 2004 2005 2006 2007 2008 2009 2010 2011
+matrix rownames A  = y  n observations
 
-outtable using "analysis/prod_jac", mat(A) cap("resilencia producción vs Jacome") f(%9.2f) replace
+outtable using "analysis/prod_jac", mat(A) cap("resilencia producción vs Jacome. definiciones 1 y 2") f(%9.2f) replace
 
 
 
@@ -242,10 +242,10 @@ y_ce_s_08 , y_ce_s_10 , y_ce_s_17 \ ///
 n_ce_s_08 , n_ce_s_10 , n_ce_s_17 \ /// 
 n_08 , n_10 , n_17 ) 
 
-matrix A colnames = 08 10 17
-matrix A rownames = yit nit ycet ncet yis nis yces nces observations  
+matrix colnames A  = 08 10 17
+matrix rownames A  = yit nit ycet ncet yis nis yces nces observations  
 
-outtable using "analysis/tit_sol_jac", mat(A) cap("resilencia titulos/solicitudes vs Jacome") f(%9.2f) replace
+outtable using "analysis/tit_sol_jac", mat(A) cap("resilencia titulos/solicitudes vs Jacome. Definiciones 3 y 4") f(%9.2f) replace
 
 
 
@@ -273,15 +273,40 @@ matrix define A=( j_i_t_10_08 , j_i_t_17_08 \ ///
  j_ce_s_10_08 , j_ce_s_17_08 \ ///
  . , j_ce_s_17_10)
  
- matrix A colnames = 10 17
- matrix A rownames = yit08 yit10 ycet08 ycet10 yis08 yis10 yces08 yces10
+ matrix colnames A  = 10 17
+ matrix rownames A  = yit08 yit10 ycet08 ycet10 yis08 yis10 yces08 yces10
+
+outtable using "analysis/tit_sol_themselves", mat(A) cap("resilencia titulos/solicitudes vs themselves") f(%9.2f) replace
 
 
+foreach k in t s{
+     foreach y in ce i{
+          foreach z in 08 10 17{
+               foreach w in 08 10 17{
+                    sum `y'nt_`k'_`z' if `y'nt_`k'_`z'==1 &  `y'nt_`k'_`w'==0
+                    scalar a=r(N)
+                    sum `y'nt_`k'_`w' if `y'nt_`k'_`z'==1
+                    scalar b=r(N)
+                    scalar j_`y'_`k'_`z'_`w'=a/b
+               }
+          }
+     }
+}
 
 
+matrix define A=( j_i_t_10_08 , j_i_t_17_08 \ ///
+ . , j_i_t_17_10 \ ///
+ j_ce_t_10_08 , j_ce_t_17_08 \ ///
+ . , j_ce_t_17_10 \ ///
+ j_i_s_10_08 , j_i_s_17_08 \ ///
+ . , j_i_s_17_10 \ ///
+ j_ce_s_10_08 , j_ce_s_17_08 \ ///
+ . , j_ce_s_17_10)
+ 
+ matrix colnames A  = 10 17
+ matrix rownames A  = yit08 yit10 ycet08 ycet10 yis08 yis10 yces08 yces10
 
-
-
+outtable using "analysis/tit_sol_themselves2", mat(A) cap("resilencia titulos/solicitudes vs themselves. definiciones 5 y 6") f(%9.2f) replace
 
 
 
