@@ -230,7 +230,7 @@ j_2005_2004, j_2006_2004, j_2007_2004, j_2008_2004, j_2009_2004, j_2010_2004, j_
 ., ., ., ., ., ., j_2011_2010)
 
 matrix colnames A =  p2005 p2006 p2007 p2008 p2009 p2010 p2011 
-matrix rownames A =  observaciones p2005 p2006 p2007 p2008 p2009 p2010 p2011
+matrix rownames A =  observaciones p2004 p2005 p2006 p2007 p2008 p2009 p2010 
 
 outtable using "analysis/prod_prod_y", mat(A) cap("Resilencia en producción de oro vs Producción años pasados. defi 7") f(%9.2f) replace
 
@@ -257,7 +257,7 @@ j_2005_2004, j_2006_2004, j_2007_2004, j_2008_2004, j_2009_2004, j_2010_2004, j_
 ., ., ., ., ., ., j_2011_2010)
 
 matrix colnames A =  p2005 p2006 p2007 p2008 p2009 p2010 p2011 
-matrix rownames A =  observaciones p2005 p2006 p2007 p2008 p2009 p2010 p2011
+matrix rownames A =  observaciones p2004 p2005 p2006 p2007 p2008 p2009 p2010
 
 outtable using "analysis/prod_prod_n", mat(A) cap("Resilencia en producción de oro vs Producción años pasados. defi 8") f(%9.2f) replace
 
