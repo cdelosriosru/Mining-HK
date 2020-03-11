@@ -44,6 +44,8 @@ foreach x in n_s_jacome area_jacome jacome potencial_a potencial_m potencial_b a
   recode `x' (.=0)
 }
 
+recode oro*(.=0)
+
 drop *mer* secondname mpio2 m_jacome
 
 /*******************************************
@@ -182,14 +184,14 @@ cd "${resultados}"
 sum jacome if jacome==1
 scalar jac=r(N)
 forvalues x = 2004(1)2011{
-     sum oro`x' if oro`x'!=0 & jacome==1
+     sum oro`x' if oro`x'==1 & jacome==1
      scalar a=r(N)
      scalar y`x'=a/jac
 }
 forvalues x = 2004(1)2011{
-     sum oro`x' if oro`x'!=0 & jacome==0
+     sum oro`x' if oro`x'==1 & jacome==0
      scalar a=r(N)
-     sum oro`x' if oro`x'!=0
+     sum oro`x' if oro`x'==1
      scalar b=r(N)
      scalar n`x'=a/b
      scalar n_`x'=r(N)
@@ -205,6 +207,59 @@ matrix rownames A  = y  n observations
 
 outtable using "analysis/prod_jac", mat(A) cap("resilencia producción vs Jacome. definiciones 1 y 2") f(%9.2f) replace
 
+
+forvalues x=2005(1)2011{
+     local y=`x'-1
+     forvalues z=2004(1)`y'{
+          sum oro`x' if oro`x'==1 & oro`z'==1
+          scalar a=r(N)
+          sum oro`x' if oro`z'==1
+          scalar b=r(N)
+          scalar j_`x'_`z'=a/b
+          scalar n_`x'=r(N)
+     }
+}
+
+matrix A = (n_2005, n_2006, n_2007, n_2008, n_2009, n_2010, n_2011 \ ///
+j_2005_2004, j_2006_2004, j_2007_2004, j_2008_2004, j_2009_2004, j_2010_2004, j_2011_2004 \ ///
+., j_2006_2005, j_2007_2005, j_2008_2005, j_2009_2005, j_2010_2005, j_2011_2005 \ ///
+., ., j_2007_2006, j_2008_2006, j_2009_2006, j_2010_2006, j_2011_2006 \ ///
+., ., ., j_2008_2007, j_2009_2007, j_2010_2007, j_2011_2007 \ ///
+., ., ., ., j_2009_2008, j_2010_2008, j_2011_2008 \ ///
+., ., ., ., ., j_2010_2009, j_2011_2009 \ ///
+., ., ., ., ., ., j_2011_2010)
+
+matrix colnames A =  p2005 p2006 p2007 p2008 p2009 p2010 p2011 
+matrix rownames A =  observaciones p2005 p2006 p2007 p2008 p2009 p2010 p2011
+
+outtable using "analysis/prod_prod_y", mat(A) cap("Resilencia en producción de oro vs Producción años pasados. defi 7") f(%9.2f) replace
+
+
+forvalues x=2005(1)2011{
+     local y=`x'-1
+     forvalues z=2004(1)`y'{
+          sum oro`x' if oro`x'==1 & oro`z'==0
+          scalar a=r(N)
+          sum oro`x' if oro`x'==1
+          scalar b=r(N)
+          scalar j_`x'_`z'=a/b
+          scalar n_`x'=r(N)
+     }
+}
+
+matrix A = (n_2005, n_2006, n_2007, n_2008, n_2009, n_2010, n_2011 \ ///
+j_2005_2004, j_2006_2004, j_2007_2004, j_2008_2004, j_2009_2004, j_2010_2004, j_2011_2004 \ ///
+., j_2006_2005, j_2007_2005, j_2008_2005, j_2009_2005, j_2010_2005, j_2011_2005 \ ///
+., ., j_2007_2006, j_2008_2006, j_2009_2006, j_2010_2006, j_2011_2006 \ ///
+., ., ., j_2008_2007, j_2009_2007, j_2010_2007, j_2011_2007 \ ///
+., ., ., ., j_2009_2008, j_2010_2008, j_2011_2008 \ ///
+., ., ., ., ., j_2010_2009, j_2011_2009 \ ///
+., ., ., ., ., ., j_2011_2010)
+
+matrix colnames A =  p2005 p2006 p2007 p2008 p2009 p2010 p2011 
+matrix rownames A =  observaciones p2005 p2006 p2007 p2008 p2009 p2010 p2011
+
+outtable using "analysis/prod_prod_n", mat(A) cap("Resilencia en producción de oro vs Producción años pasados. defi 8") f(%9.2f) replace
 
 
 foreach k in t s{
@@ -248,7 +303,6 @@ matrix rownames A  = yit nit ycet ncet yis nis yces nces observations
 outtable using "analysis/tit_sol_jac", mat(A) cap("resilencia titulos/solicitudes vs Jacome. Definiciones 3 y 4") f(%9.2f) replace
 
 
-
 foreach k in t s{
      foreach y in ce i{
           foreach z in 08 10 17{
@@ -262,7 +316,6 @@ foreach k in t s{
           }
      }
 }
-
 
 matrix define A=( j_i_t_10_08 , j_i_t_17_08 \ ///
  . , j_i_t_17_10 \ ///
