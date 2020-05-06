@@ -4,45 +4,22 @@
 # PURPOSE :				merge mining titles with municipalities in Colombia. This creates the data bases necessary to 
 #                 perform the econometric analysis. I have three ways of measuring gold
 # DATE WRITTEN :   		21.02.2020
-# LAST REVISION DATE: 	25.02.2020
+# LAST REVISION DATE: 	29.04.2020
 # LAST REVISED BY :   	Camilo De Los Rios  Rueda
-
-
-
-
-
-
-
 
 
 ##==============================================================================
 ## INITIALIZE
 ##==============================================================================
 
-
-library(dplyr)
-library(sf)
-library(sp)
-library(rgdal)
-library(maptools)
-library(rgeos)
-library(raster)
-library(sf)
-library(raster)
-library(stars)
-library(maps)
-library(geosphere)
-library(foreign)
-library(tidyverse)
-library(xlsx)
-library(plyr)
-library(cleangeo)
-
+z<-c("ggplot2","ggmap","dplyr", "sf", "sp","rgdal","maptools","rgeos","raster","sf","raster","stars","maps","geosphere","foreign","tidyverse","plyr","cleangeo","hablar","haven","dplyr","maps","viridis","cartogram","tidyverse","broom","readstata13")
+lapply(z, library, character.only = TRUE) 
 
 ##==============================================================================
 ## PATHS
 ##==============================================================================
-data = "C:/Users/camilodel/Desktop/IDB/MINING-HK/DATA"
+#data = "C:/Users/camilodel/Desktop/IDB/MINING-HK/DATA"
+data = "Z:/IDB/MINING-HK/DATA" # si está en dropx
 mineria = paste(data,"/Mineria/titulos_colombia", sep="") #poner si esta en el hard drive
 municipios = paste(data,"/PoliticalBoundaries/Colombia", sep="")
 #-----------------------------------IMPORTING FILES----------------------------------------
@@ -180,28 +157,40 @@ setwd(paste(mineria,'/harm',sep=""))
 
 mpios_oro_t_08<-raster::intersect(t_08,mpios)
 mpios_oro_t_08<-as.data.frame(mpios_oro_t_08)
-write.dta(mpios_oro_t_08, "int_mpios_oro_t_08.dta")
+
+mpios_oro_t_08 %>% mutate_if(is.factor, as.character) -> mpios_oro_t_08
+save.dta13(mpios_oro_t_08, "int_mpios_oro_t_08.dta")
 
 mpios_oro_t_10<-raster::intersect(t_10,mpios)
 mpios_oro_t_10<-as.data.frame(mpios_oro_t_10)
-write.dta(mpios_oro_t_10, "int_mpios_oro_t_10.dta")
+
+mpios_oro_t_10 %>% mutate_if(is.factor, as.character) -> mpios_oro_t_10
+save.dta13(mpios_oro_t_10, "int_mpios_oro_t_10.dta")
 
 mpios_oro_t_17<-raster::intersect(t_17,mpios)
 mpios_oro_t_17<-as.data.frame(mpios_oro_t_17)
-write.dta(mpios_oro_t_17, "int_mpios_oro_t_17.dta")
+
+mpios_oro_t_17 %>% mutate_if(is.factor, as.character) -> mpios_oro_t_17
+save.dta13(mpios_oro_t_17, "int_mpios_oro_t_17.dta")
 
 
 mpios_oro_s_08<-raster::intersect(s_08,mpios)
 mpios_oro_s_08<-as.data.frame(mpios_oro_s_08)
-write.dta(mpios_oro_s_08, "int_mpios_oro_s_08.dta")
+
+mpios_oro_s_08 %>% mutate_if(is.factor, as.character) -> mpios_oro_s_08
+save.dta13(mpios_oro_s_08, "int_mpios_oro_s_08.dta")
 
 mpios_oro_s_10<-raster::intersect(s_10,mpios)
 mpios_oro_s_10<-as.data.frame(mpios_oro_s_10)
-write.dta(mpios_oro_s_10, "int_mpios_oro_s_10.dta")
+
+mpios_oro_s_10 %>% mutate_if(is.factor, as.character) -> mpios_oro_s_10
+save.dta13(mpios_oro_s_10, "int_mpios_oro_s_10.dta")
 
 mpios_oro_s_17<-raster::intersect(s_17,mpios)
 mpios_oro_s_17<-as.data.frame(mpios_oro_s_17)
-write.dta(mpios_oro_s_17, "int_mpios_oro_s_17.dta")
+
+mpios_oro_s_17 %>% mutate_if(is.factor, as.character) -> mpios_oro_s_17
+save.dta13(mpios_oro_s_17, "int_mpios_oro_s_17.dta")
 
 
 #----CENTROIDS----
@@ -211,21 +200,27 @@ c_t_08_st<-st_as_sf(c_t_08)
 mpios_oro_t_08_st<-st_intersection(mpios_st,c_t_08_st) 
 mpios_oro_t_08<-as(mpios_oro_t_08_st,'Spatial')
 mpios_oro_t_08_dta<- as.data.frame(mpios_oro_t_08, xy=TRUE, na.rm=TRUE)
-write.dta(mpios_oro_t_08_dta, "cent_mpios_oro_t_08.dta") 
+
+mpios_oro_t_08_dta %>% mutate_if(is.factor, as.character) -> mpios_oro_t_08_dta
+save.dta13(mpios_oro_t_08_dta, "cent_mpios_oro_t_08.dta") 
 
 c_t_10<-SpatialPointsDataFrame(gCentroid(t_10, byid=TRUE), t_10@data, match.ID = FALSE) 
 c_t_10_st<-st_as_sf(c_t_10)
 mpios_oro_t_10_st<-st_intersection(mpios_st,c_t_10_st) 
 mpios_oro_t_10<-as(mpios_oro_t_10_st,'Spatial')
 mpios_oro_t_10_dta<- as.data.frame(mpios_oro_t_10, xy=TRUE, na.rm=TRUE)
-write.dta(mpios_oro_t_10_dta, "cent_mpios_oro_t_10.dta") 
+
+mpios_oro_t_10_dta %>% mutate_if(is.factor, as.character) -> mpios_oro_t_10_dta
+save.dta13(mpios_oro_t_10_dta, "cent_mpios_oro_t_10.dta") 
 
 c_t_17<-SpatialPointsDataFrame(gCentroid(t_17, byid=TRUE), t_17@data, match.ID = FALSE) 
 c_t_17_st<-st_as_sf(c_t_17)
 mpios_oro_t_17_st<-st_intersection(mpios_st,c_t_17_st) 
 mpios_oro_t_17<-as(mpios_oro_t_17_st,'Spatial')
 mpios_oro_t_17_dta<- as.data.frame(mpios_oro_t_17, xy=TRUE, na.rm=TRUE)
-write.dta(mpios_oro_t_17_dta, "cent_mpios_oro_t_17.dta") 
+
+mpios_oro_t_17_dta %>% mutate_if(is.factor, as.character) -> mpios_oro_t_17_dta
+save.dta13(mpios_oro_t_17_dta, "cent_mpios_oro_t_17.dta") 
 
 
 c_s_08<-SpatialPointsDataFrame(gCentroid(s_08, byid=TRUE), s_08@data, match.ID = FALSE) 
@@ -233,21 +228,27 @@ c_s_08_st<-st_as_sf(c_s_08)
 mpios_oro_s_08_st<-st_intersection(mpios_st,c_s_08_st) 
 mpios_oro_s_08<-as(mpios_oro_s_08_st,'Spatial')
 mpios_oro_s_08_dta<- as.data.frame(mpios_oro_s_08, xy=TRUE, na.rm=TRUE)
-write.dta(mpios_oro_s_08_dta, "cens_mpios_oro_s_08.dta") 
+
+mpios_oro_s_08_dta %>% mutate_if(is.factor, as.character) -> mpios_oro_s_08_dta
+save.dta13(mpios_oro_s_08_dta, "cens_mpios_oro_s_08.dta") 
 
 c_s_10<-SpatialPointsDataFrame(gCentroid(s_10, byid=TRUE), s_10@data, match.ID = FALSE) 
 c_s_10_st<-st_as_sf(c_s_10)
 mpios_oro_s_10_st<-st_intersection(mpios_st,c_s_10_st) 
 mpios_oro_s_10<-as(mpios_oro_s_10_st,'Spatial')
 mpios_oro_s_10_dta<- as.data.frame(mpios_oro_s_10, xy=TRUE, na.rm=TRUE)
-write.dta(mpios_oro_s_10_dta, "cens_mpios_oro_s_10.dta") 
+
+mpios_oro_s_10_dta %>% mutate_if(is.factor, as.character) -> mpios_oro_s_10_dta
+save.dta13(mpios_oro_s_10_dta, "cens_mpios_oro_s_10.dta") 
 
 c_s_17<-SpatialPointsDataFrame(gCentroid(s_17, byid=TRUE), s_17@data, match.ID = FALSE) 
 c_s_17_st<-st_as_sf(c_s_17)
 mpios_oro_s_17_st<-st_intersection(mpios_st,c_s_17_st) 
 mpios_oro_s_17<-as(mpios_oro_s_17_st,'Spatial')
 mpios_oro_s_17_dta<- as.data.frame(mpios_oro_s_17, xy=TRUE, na.rm=TRUE)
-write.dta(mpios_oro_s_17_dta, "cens_mpios_oro_s_17.dta") 
+
+mpios_oro_s_17_dta %>% mutate_if(is.factor, as.character) -> mpios_oro_s_17_dta
+save.dta13(mpios_oro_s_17_dta, "cens_mpios_oro_s_17.dta") 
 
 #-------AREAS--------
 
@@ -304,8 +305,9 @@ write.dta(mpios_oro_s_17_dta, "cens_mpios_oro_s_17.dta")
     pi$a_inter_pc<-(pi$area/1000000)/pi$a_m_km2
     pi<-as(pi,'Spatial')
     pi<-as.data.frame(pi)
-
-    write.dta(data = pi , file = "area_mpios_oro_t_08.dta") # FINALLY!
+    
+    pi %>% mutate_if(is.factor, as.character) -> pi
+    save.dta13(data = pi , file = "area_mpios_oro_t_08.dta") 
     
     
 
@@ -362,7 +364,8 @@ write.dta(mpios_oro_s_17_dta, "cens_mpios_oro_s_17.dta")
     pi<-as(pi,'Spatial')
     pi<-as.data.frame(pi)
     
-    write.dta(data = pi , file = "area_mpios_oro_t_10.dta") # FINALLY!
+    pi %>% mutate_if(is.factor, as.character) -> pi
+    save.dta13(data = pi , file = "area_mpios_oro_t_10.dta") 
     
     
     
@@ -418,7 +421,8 @@ write.dta(mpios_oro_s_17_dta, "cens_mpios_oro_s_17.dta")
     pi<-as(pi,'Spatial')
     pi<-as.data.frame(pi)
     
-    write.dta(data = pi , file = "area_mpios_oro_t_17.dta") # FINALLY!
+    pi %>% mutate_if(is.factor, as.character) -> pi
+    save.dta13(data = pi , file = "area_mpios_oro_t_17.dta") 
     
 
     
@@ -476,7 +480,8 @@ write.dta(mpios_oro_s_17_dta, "cens_mpios_oro_s_17.dta")
     pi<-as(pi,'Spatial')
     pi<-as.data.frame(pi)
     
-    write.dta(data = pi , file = "area_mpios_oro_s_08.dta") # FINALLY!
+    pi %>% mutate_if(is.factor, as.character) -> pi
+    save.dta13(data = pi , file = "area_mpios_oro_s_08.dta") 
     
     
     
@@ -535,7 +540,8 @@ write.dta(mpios_oro_s_17_dta, "cens_mpios_oro_s_17.dta")
     pi<-as(pi,'Spatial')
     pi<-as.data.frame(pi)
     
-    write.dta(data = pi , file = "area_mpios_oro_s_10.dta") # FINALLY!
+    pi %>% mutate_if(is.factor, as.character) -> pi
+    save.dta13(data = pi , file = "area_mpios_oro_s_10.dta") 
     
     
     
@@ -591,90 +597,15 @@ write.dta(mpios_oro_s_17_dta, "cens_mpios_oro_s_17.dta")
     pi<-as(pi,'Spatial')
     pi<-as.data.frame(pi)
     
-    write.dta(data = pi , file = "area_mpios_oro_s_17.dta") # FINALLY!
+    pi %>% mutate_if(is.factor, as.character) -> pi
+    save.dta13(data = pi , file = "area_mpios_oro_s_17.dta") # FINALLY!
     
     
     
     
-#------------------------------------------------------------------------------
-#------------------------------------------------------------------------------       
-    #             now for the abnormal ones. 
     
-#-------------------------2014---------------------------
-
-setwd(mineria) 
-
-
-O1_14 <- readOGR(dsn="raw/2014", layer="T14_1") 
-O2_14 <- readOGR(dsn="raw/2014", layer="T14_2") 
-
-keep_1 <- c("MINERALES","FECHA_INSC")
-keep_2 <- c("MINERALES","FECHA_RADI")
-
-O1_14 <- O1_14[,(names(O1_14) %in% keep_1)]
-O1_14$ID<- seq.int(nrow(O1_14))
-
-O2_14 <- O2_14[,(names(O2_14) %in% keep_2)]
-O2_14$ID<- seq.int(nrow(O2_14))
-
-
-O1_14 <- O1_14[grepl('ORO',O1_14$MINERALES),] # extract only the relevant info. 
-writeOGR(O1_14, dsn="harm/2014", layer="O1_14", driver ="ESRI Shapefile", overwrite_layer = T)
-O1_14 <- readOGR(dsn="harm/2014", layer="O1_14") 
-O1_14$a_t_km2<-area(O1_14)/1000000 
-O1_14<-spTransform(O1_14, crs(mpios)) 
-
-
-O2_14 <- O2_14[grepl('ORO',O2_14$MINERALES),] # extract only the relevant info. 
-writeOGR(O2_14, dsn="harm/2014", layer="O2_14", driver ="ESRI Shapefile", overwrite_layer = T)
-O2_14 <- readOGR(dsn="harm/2014", layer="O2_14") 
-O2_14$a_t_km2<-area(O2_14)/1000000 
-O2_14<-spTransform(O2_14, crs(mpios)) 
-
-
-
-#------BASICS--------- 
-# Basic convertions that I need for more than one task. 
-mpios<-clgeo_Clean(mpios)
-
-O1_14 <-clgeo_Clean(O1_14)
-O2_14 <-clgeo_Clean(O2_14)
-
-
-mpios_st<-st_as_sf(mpios)
-
-O1_14_st<-st_as_sf(O1_14)
-O2_14_st<-st_as_sf(O2_14)
-
-
-# set the folder where I want everything to be saved. 
-setwd(paste(mineria,'/harm',sep="")) 
-
-#------INTERSECTION------
-
-mpios_oro_O1_14<-raster::intersect(O1_14,mpios)
-mpios_oro_O1_14<-as.data.frame(mpios_oro_O1_14)
-write.dta(mpios_oro_O1_14, "int_mpios_oro_O1_14.dta")
-
-mpios_oro_O2_14<-raster::intersect(O2_14,mpios)
-mpios_oro_O2_14<-as.data.frame(mpios_oro_O2_14)
-write.dta(mpios_oro_O2_14, "int_mpios_oro_O2_14.dta")
-
-#----CENTROIDS----
-
-c_O1_14<-SpatialPointsDataFrame(gCentroid(O1_14, byid=TRUE), O1_14@data, match.ID = FALSE) 
-c_O1_14_st<-st_as_sf(c_O1_14)
-mpios_oro_O1_14_st<-st_intersection(mpios_st,c_O1_14_st) 
-mpios_oro_O1_14<-as(mpios_oro_O1_14_st,'Spatial')
-mpios_oro_O1_14_dta<- as.data.frame(mpios_oro_O1_14, xy=TRUE, na.rm=TRUE)
-write.dta(mpios_oro_O1_14_dta, "cent_mpios_oro_O1_14.dta") 
-
-c_O2_14<-SpatialPointsDataFrame(gCentroid(O2_14, byid=TRUE), O2_14@data, match.ID = FALSE) 
-c_O2_14_st<-st_as_sf(c_O2_14)
-mpios_oro_O2_14_st<-st_intersection(mpios_st,c_O2_14_st) 
-mpios_oro_O2_14<-as(mpios_oro_O2_14_st,'Spatial')
-mpios_oro_O2_14_dta<- as.data.frame(mpios_oro_O2_14, xy=TRUE, na.rm=TRUE)
-write.dta(mpios_oro_O2_14_dta, "cent_mpios_oro_O2_14.dta") 
+    
+    
     
     
     
