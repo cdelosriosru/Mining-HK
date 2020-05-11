@@ -300,8 +300,7 @@ save.dta13(data = pi , file = "area_mpios_geo.dta")
 
 #---------------------POZOS--------------------------------
 setwd(oil_f)
-install.packages("readstata13")
-library(readstata13)
+
 pozos<-readOGR(dsn="raw", layer="POZOS_EPIS_SGC_2020_04_30")
 pozos<-clgeo_Clean(pozos)
 pozos<-spTransform(pozos,crs(mpios))
