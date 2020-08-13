@@ -230,7 +230,7 @@ mpios_oro_s_08<-as(mpios_oro_s_08_st,'Spatial')
 mpios_oro_s_08_dta<- as.data.frame(mpios_oro_s_08, xy=TRUE, na.rm=TRUE)
 
 mpios_oro_s_08_dta %>% mutate_if(is.factor, as.character) -> mpios_oro_s_08_dta
-save.dta13(mpios_oro_s_08_dta, "cens_mpios_oro_s_08.dta") 
+save.dta13(mpios_oro_s_08_dta, "cent_mpios_oro_s_08.dta") 
 
 c_s_10<-SpatialPointsDataFrame(gCentroid(s_10, byid=TRUE), s_10@data, match.ID = FALSE) 
 c_s_10_st<-st_as_sf(c_s_10)
@@ -239,7 +239,7 @@ mpios_oro_s_10<-as(mpios_oro_s_10_st,'Spatial')
 mpios_oro_s_10_dta<- as.data.frame(mpios_oro_s_10, xy=TRUE, na.rm=TRUE)
 
 mpios_oro_s_10_dta %>% mutate_if(is.factor, as.character) -> mpios_oro_s_10_dta
-save.dta13(mpios_oro_s_10_dta, "cens_mpios_oro_s_10.dta") 
+save.dta13(mpios_oro_s_10_dta, "cent_mpios_oro_s_10.dta") 
 
 c_s_17<-SpatialPointsDataFrame(gCentroid(s_17, byid=TRUE), s_17@data, match.ID = FALSE) 
 c_s_17_st<-st_as_sf(c_s_17)
@@ -248,7 +248,7 @@ mpios_oro_s_17<-as(mpios_oro_s_17_st,'Spatial')
 mpios_oro_s_17_dta<- as.data.frame(mpios_oro_s_17, xy=TRUE, na.rm=TRUE)
 
 mpios_oro_s_17_dta %>% mutate_if(is.factor, as.character) -> mpios_oro_s_17_dta
-save.dta13(mpios_oro_s_17_dta, "cens_mpios_oro_s_17.dta") 
+save.dta13(mpios_oro_s_17_dta, "cent_mpios_oro_s_17.dta") 
 
 #-------AREAS--------
 
