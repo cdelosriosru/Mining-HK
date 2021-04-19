@@ -38,7 +38,7 @@ foreach x in DESMIL INCAUTA MAP MUSE OTROS SOSP{
 
 * give labels
 
-foreach x in 5000 10000 15000 20000{
+foreach x in 5000 10000 20000 30000{
 
 	replace OTROS_`x'=OTROS_`x'-SOSP_`x' 
 
@@ -53,7 +53,7 @@ foreach x in 5000 10000 15000 20000{
 
 *recode 
 
-foreach y in 5000 10000 15000 20000{
+foreach y in 5000 10000 20000 30000{
 
 	foreach x in DESMIL INCAUTA MAP MUSE OTROS SOSP{
 

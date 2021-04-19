@@ -99,7 +99,7 @@ use "${compiled}/hk_oilwells_colegio_mines.dta", clear
 
 * First create your treatment variables. 
 
-foreach y in 5000 10000 20000{
+foreach y in 5000 10000 20000 30000{
 
 	foreach x in DESMIL INCAUTA MAP MUSE OTROS SOSP{
 
@@ -116,8 +116,8 @@ foreach x in oil_price brent_price{
 
 
 
-foreach x in  2500 5000 10000 20000 25000 30000 35000 {
-	foreach y in 1960 1970 1980 1990 2000 {
+foreach x in  5000 10000 20000 30000 {
+	foreach y in 1970 1980 1990 2000 {
 	
 	* SD version of wells measure
 		egen wells_`y'_`x'sd = std(wells_`y'_`x')
@@ -152,7 +152,7 @@ foreach w in 10000  { // 2500 5000 20000 25000 30000 35000
 	egen wells_accum_`w'sd = std(wells_accum_`w')
 	egen npozos_`w'sd = std(npozos_`w')
 	
-	foreach y in 30 {
+	foreach y in 30 15 {
 		egen wells_accum`y'_`w'sd = std(wells_accum`y'_`w')
 	}
 }
@@ -182,7 +182,7 @@ foreach x in  pct2 enroled_he rent_seeker non_rent_seeker_1   semestertohe unive
 
 *generating the pure control var
 
-foreach w in 2500 5000 10000 20000 25000 30000 35000 {
+foreach w in 5000 10000 20000 30000 {
 	tempvar control_`w'
 	bys id_cole: egen `control_`w''=max(wells_accum_`w')
 	gen pure_control_`w'=(`control_`w''==0 )

@@ -75,7 +75,7 @@ MAP<-readOGR(dsn="harm", layer="map")
 
 #---------------MAP------
 
-x <- c(5000,10000,15000, 20000, 30000) # Different buffers, in meters.
+x <- c(5000,10000, 20000, 30000) # Different buffers, in meters.
 
 MAP$MAP<-1
 
@@ -106,19 +106,19 @@ for (val in 1:length(x)) {
 setwd(compiled)
 
 mer1<-merge(cole_MAP_10000,cole_MAP_5000,all=TRUE)
-mer2<-merge(mer1,cole_MAP_15000,all=TRUE)
-mer3<-merge(mer2,cole_MAP_20000,all=TRUE)
-cole_MAP_all<-merge(mer3,cole_MAP_30000,all=TRUE)
+mer2<-merge(mer1,cole_MAP_20000,all=TRUE)
+cole_MAP_all<-merge(mer2,cole_MAP_30000,all=TRUE)
+
 
 cole_MAP_all %>% mutate_if(is.factor, as.character) -> cole_MAP_all
 
 save.dta13(data=cole_MAP_all,file="cole_MAP_all.dta")
 
-rm(mer1,mer2,cole_MAP_all,cole_MAP_10000,cole_MAP_5000,cole_MAP_15000,cole_MAP_20000)
+rm(mer1,mer2,cole_MAP_all,cole_MAP_10000,cole_MAP_5000,cole_MAP_20000, cole_MAP_30000)
 
 #---------------MUSE------
 
-x <- c(5000,10000,15000, 20000) # Different buffers, in meters.
+x <- c(5000,10000, 20000, 30000) # Different buffers, in meters.
 
 MUSE$MUSE<-1
 
@@ -149,19 +149,19 @@ for (val in 1:length(x)) {
 setwd(compiled)
 
 mer1<-merge(cole_MUSE_10000,cole_MUSE_5000,all=TRUE)
-mer2<-merge(mer1,cole_MUSE_15000,all=TRUE)
-cole_MUSE_all<-merge(mer2,cole_MUSE_20000,all=TRUE)
+mer2<-merge(mer1,cole_MUSE_20000,all=TRUE)
+cole_MUSE_all<-merge(mer2,cole_MUSE_30000,all=TRUE)
 
 cole_MUSE_all %>% mutate_if(is.factor, as.character) -> cole_MUSE_all
 
 save.dta13(data=cole_MUSE_all,file="cole_MUSE_all.dta")
 
-rm(mer1,mer2,cole_MUSE_all,cole_MUSE_10000,cole_MUSE_5000,cole_MUSE_15000,cole_MUSE_20000)
+rm(mer1,mer2,cole_MUSE_all,cole_MUSE_10000,cole_MUSE_5000,cole_MUSE_30000,cole_MUSE_20000)
 
 
 #---------------DESMIL------
 
-x <- c(5000,10000,15000, 20000) # Different buffers, in meters.
+x <- c(5000,10000, 20000, 30000) # Different buffers, in meters.
 
 DESMIL$DESMIL<-1
 
@@ -192,19 +192,19 @@ for (val in 1:length(x)) {
 setwd(compiled)
 
 mer1<-merge(cole_DESMIL_10000,cole_DESMIL_5000,all=TRUE)
-mer2<-merge(mer1,cole_DESMIL_15000,all=TRUE)
-cole_DESMIL_all<-merge(mer2,cole_DESMIL_20000,all=TRUE)
+mer2<-merge(mer1,cole_DESMIL_20000,all=TRUE)
+cole_DESMIL_all<-merge(mer2,cole_DESMIL_30000,all=TRUE)
 
 cole_DESMIL_all %>% mutate_if(is.factor, as.character) -> cole_DESMIL_all
 
 save.dta13(data=cole_DESMIL_all,file="cole_DESMIL_all.dta")
 
-rm(mer1,mer2,cole_DESMIL_all,cole_DESMIL_10000,cole_DESMIL_5000,cole_DESMIL_15000,cole_DESMIL_20000)
+rm(mer1,mer2,cole_DESMIL_all,cole_DESMIL_10000,cole_DESMIL_5000,cole_DESMIL_30000,cole_DESMIL_20000)
 
 
 #---------------INCAUTA------
 
-x <- c(5000,10000,15000, 20000) # Different buffers, in meters.
+x <- c(5000,10000,20000,30000) # Different buffers, in meters.
 
 INCAUTA$INCAUTA<-1
 
@@ -235,20 +235,20 @@ for (val in 1:length(x)) {
 setwd(compiled)
 
 mer1<-merge(cole_INCAUTA_10000,cole_INCAUTA_5000,all=TRUE)
-mer2<-merge(mer1,cole_INCAUTA_15000,all=TRUE)
-cole_INCAUTA_all<-merge(mer2,cole_INCAUTA_20000,all=TRUE)
+mer2<-merge(mer1,cole_INCAUTA_20000,all=TRUE)
+cole_INCAUTA_all<-merge(mer2,cole_INCAUTA_30000,all=TRUE)
 
 cole_INCAUTA_all %>% mutate_if(is.factor, as.character) -> cole_INCAUTA_all
 
 save.dta13(data=cole_INCAUTA_all,file="cole_INCAUTA_all.dta")
 
-rm(mer1,mer2,cole_INCAUTA_all,cole_INCAUTA_10000,cole_INCAUTA_5000,cole_INCAUTA_15000,cole_INCAUTA_20000)
+rm(mer1,mer2,cole_INCAUTA_all,cole_INCAUTA_10000,cole_INCAUTA_5000,cole_INCAUTA_30000,cole_INCAUTA_20000)
 
 
 
 #---------------OTROS------
 
-x <- c(5000,10000,15000, 20000) # Different buffers, in meters.
+x <- c(5000,10000, 20000, 30000) # Different buffers, in meters.
 
 OTROS$OTROS<-1
 
@@ -279,20 +279,20 @@ for (val in 1:length(x)) {
 setwd(compiled)
 
 mer1<-merge(cole_OTROS_10000,cole_OTROS_5000,all=TRUE)
-mer2<-merge(mer1,cole_OTROS_15000,all=TRUE)
-cole_OTROS_all<-merge(mer2,cole_OTROS_20000,all=TRUE)
+mer2<-merge(mer1,cole_OTROS_20000,all=TRUE)
+cole_OTROS_all<-merge(mer2,cole_OTROS_30000,all=TRUE)
 
 cole_OTROS_all %>% mutate_if(is.factor, as.character) -> cole_OTROS_all
 
 save.dta13(data=cole_OTROS_all,file="cole_OTROS_all.dta")
 
-rm(mer1,mer2,cole_OTROS_all,cole_OTROS_10000,cole_OTROS_5000,cole_OTROS_15000,cole_OTROS_20000)
+rm(mer1,mer2,cole_OTROS_all,cole_OTROS_10000,cole_OTROS_5000,cole_OTROS_30000,cole_OTROS_20000)
 
 
 
 #---------------SOSP------
 
-x <- c(5000,10000,15000, 20000) # Different buffers, in meters.
+x <- c(5000,10000,20000, 30000) # Different buffers, in meters.
 
 SOSP$SOSP<-1
 
@@ -323,14 +323,14 @@ for (val in 1:length(x)) {
 setwd(compiled)
 
 mer1<-merge(cole_SOSP_10000,cole_SOSP_5000,all=TRUE)
-mer2<-merge(mer1,cole_SOSP_15000,all=TRUE)
-cole_SOSP_all<-merge(mer2,cole_SOSP_20000,all=TRUE)
+mer2<-merge(mer1,cole_SOSP_20000,all=TRUE)
+cole_SOSP_all<-merge(mer2,cole_SOSP_30000,all=TRUE)
 
 cole_SOSP_all %>% mutate_if(is.factor, as.character) -> cole_SOSP_all
 
 save.dta13(data=cole_SOSP_all,file="cole_SOSP_all.dta")
 
-rm(mer1,mer2,cole_SOSP_all,cole_SOSP_10000,cole_SOSP_5000,cole_SOSP_15000,cole_SOSP_20000)
+rm(mer1,mer2,cole_SOSP_all,cole_SOSP_10000,cole_SOSP_5000,cole_SOSP_30000,cole_SOSP_20000)
 
 
 

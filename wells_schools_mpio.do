@@ -191,6 +191,7 @@ foreach x in   5000 10000 20000  30000 {
 
 
 sa "${oil}/harm/wells_measures_cole.dta", replace
+use "${oil}/harm/wells_measures_cole.dta", clear
 
 /*------------------------------------------------------------------------------
 
