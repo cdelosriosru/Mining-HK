@@ -14,7 +14,7 @@ BUGGS TO FIX:
 
       * PATHS
       
-global data "C:/Users/camilodel/Desktop/IDB/MINING-HK/DATA"
+global data "C:/Users/cdelo/Dropbox/HK_Extractives_2020/DATA"
 global tit_min "${data}/Mineria/titulos_colombia/harm"
 global oil "${data}/Petroleo/harm"
 global geo "${data}/Mineria/geo/harm"
@@ -392,8 +392,8 @@ sa "${data}/full-harm/water_mine_oil_geo_prod.dta", replace
 			These come in panel, so will be treated different
 ------------------------------------------------------------------------------*/
 
-use "${oil}/mpio_pozos_all.dta", clear
-
+use "${oil}/mpio_pozos_all.dta", clear  
+drop coords*
 * gen variables that might be usefull
 
 gen spud_y=substr(WELL_SPUD_,1,4)
@@ -432,9 +432,8 @@ tostring codmpio, replace
 
 
 sa "${oil}/mpio_pozos_all_cleaned.dta", replace
-
+/*
 gen nwell=1
-
 collapse (sum) nwell (min) spud_y, by(codmpio)
 
 gen well=1

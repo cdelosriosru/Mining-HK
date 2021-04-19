@@ -1,34 +1,122 @@
-**************************************************************************************
+/**************************************************************************************
 
-* PROJECT :     	Mining - HK
-* AUTHOR :			Camilo De Los Rios
-* PURPOSE :			Quick analysis of wells in Colombia
+ PROJECT :     	Mining - HK
+ AUTHOR :			Camilo De Los Rios
+ PURPOSE :		Create measures of dependence on the royaltes. One of the main ideas in this 
+				literature is that it is not the abundance but rather the dependence
+				on the natural resources that is bad for the country. We are going
+				to check it at the municipality level. 
 
+With the new royalties that I created this makes much more sense. I still have to edit this. 
 
-**************************************************************************************
+**************************************************************************************/
 
       * PATHS
       
-global data "C:/Users/camilodel/Desktop/IDB/MINING-HK/DATA"
+global data "C:/Users/cdelo/Dropbox/HK_Extractives_2020/DATA"
 global tit_min "${data}/Mineria/titulos_colombia/harm"
 global oil "${data}/Petroleo/harm"
 global fiscal "${data}/Other-muni/harm"
 global inst "${data}/Institutional_Index/harmonized"
+global reg_anh "${data}/Regalias_Produccion_ANH"
+global compiled "${data}/compiled_sets"
 
-	* Oil Wells
+	* Import and prepare the oil wells by municipality. 
+	
 use "${oil}/mpio_pozos_all_cleaned.dta", clear
-gen wells_y=1 
-collapse (sum) wells_y, by(codmpio spud_y)
+gen wells=1 
+collapse (sum) wells, by(codmpio spud_y)
 destring spud_y, replace
-drop if spud_y<2000
-collapse (sum) wells_y, by(codmpio)
+drop if spud_y==.
+drop if spud_y<1980
+fillin codmpio spud_y
+gen wells_30=.
+unique spud_y
+local tope=r(unique)
+forvalues n = 1(1)`tope' {
+	cap drop i`n'
+	bys codmpio: gen i`n' = 1 if  spud_y[`n']>=spud_y & (spud_y[`n']-spud_y) <= 30
+	bys codmpio: egen pozos`n' = total(wells) if i`n'==1
+	bys codmpio: replace wells_30 = pozos`n' if mi(wells_30)
+	drop  i`n'
+	drop pozos`n'
+}
+
+rename spud_y year
+destring codmpio, replace
+
 tempfile wells_collapsed
 sa `wells_collapsed'
 
-use "${fiscal}/regalias.dta", clear
-merge m:1 codmpio using `wells_collapsed', gen(w_y)
-label var wells_y "Number of wells drilled since 2000"
+* Merge the data with royalties and income. 
 
+use "${reg_anh}/harm/reg_anh.dta", clear
+merge 1:1 codmpio year using `wells_collapsed', gen(w_y)
+bys codmpio: egen totpozos_mpio_2000=total(wells) if year>=2000
+bys codmpio: egen totpozos_mpio=total(wells)
+label var totpozos_mpio_2000 "Number of wells drilled since 2000"
+label var totpozos_mpio "Number of wells drilled since 1980"
+label var wells_30 "Number of wells drilled until that year and not older than 30 years"
+label var wells "Number of wells drilled in that year"
+drop if w_y==2 // years 2020, 1980-1983.
+
+foreach x in wells_30 wells totpozos_mpio totpozos_mpio_2000{
+	recode `x'(.=0)
+}
+
+
+
+* GENERATING DEPENDENCE MEASURE; I guess abundance y very straight forward: total number of wells. We could be much more sophisticates and make a measuresof how responsive is the number of wells in each municipality depending on the oil price ¿and controling for violence?
+gen depend_trib=regalias_oil_producers/ing_trib
+
+
+* the basic var... 
+
+gen depend_inc=regalias_oil_producers/income
+replace depend_inc=. if regalias_oil_producers==0 | regalias_oil_producers==. // otherwise I am not counting it right
+
+*A pooled measure
+
+egen p_depend_inc_h = xtile(depend_inc) if depend_inc!=. , n(100)
+gen dependent_inc_w=1 if p_depend_inc_h>=50 & p_depend_inc_h!=.
+replace dependent_inc_w=0 if  p_depend_inc_h<50  & p_depend_inc_h!=.
+label var dependent_inc_w "dependence created on the pooled sample"
+
+* A yearly measure 
+
+bys year: egen p_depend_inc_hy = xtile(depend_inc) if depend_inc!=. , n(100)
+bys year: gen dependent_inc_wy=1 if p_depend_inc_hy>=50 & p_depend_inc_hy!=.
+replace dependent_inc_wy=0 if p_depend_inc_hy<50  & p_depend_inc_hy!=.
+label var dependent_inc_wy "dependence created on a year by year basis"
+
+* now an Aggregate measure. 
+preserve 
+	collapse (sum) depend_inc, by(codmpio)
+	egen p_depend_inc_ha = xtile(depend_inc) if depend_inc!=. & depend_inc>0 , n(100)
+	gen dependent_inc_wa=1 if p_depend_inc_ha>=50 & p_depend_inc_ha!=.
+	replace dependent_inc_wa=0 if  p_depend_inc_ha<50  & p_depend_inc_ha!=.
+	label var dependent_inc_wa "dependence created aggregating all years"
+	tab dependent_inc_wa
+	tempfile aggregated
+	sa `aggregated'
+restore 
+
+merge m:1 codmpio using `aggregated', gen(m_agr)
+
+
+tab dependent_inc_w // perfect 
+tab dependent_inc_wy // perfect 
+tab dependent_inc_wa if year>=2000 & year<=2017 // this certainly increases the number of dependent and non dependent mpios. Obvious.  
+
+
+sa "${compiled}/regalias_dependent.dta", replace
+
+
+
+
+
+tab dependent_wy // perfect 
+tab dependent_w // perfect 
 
 
 * Now merge it with the other measures to try to make it hiper clear what I have i this regard 
