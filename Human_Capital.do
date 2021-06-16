@@ -27,7 +27,7 @@ global municipios "${data}/PoliticalBoundaries"
 
 
 */
-use "${hk}/raw/HumanCapital.dta", clear
+use "${hk}/raw/HumanCapital_isic.dta", clear // la version del paper se hizo con los datos sin isic. Chequear que de lo mismo después. 
 
 * first leave only the individuals that have info on the location of the schools and the school id
 
@@ -82,7 +82,7 @@ use "${hk}/raw/HumanCapital_clean.dta", clear
 
 * keep only variables that you need. 
 
-keep prog_area periodo year periodoprimiparo pct2 Cale_A colegio_cod codmpio ies annonac mujer desertor academico universitario publica lat_cole lon_cole oficial urbano TDCp* TibcpA* date_grad
+keep prog_area periodo year periodoprimiparo pct2 Cale_A colegio_cod codmpio ies annonac mujer desertor academico universitario publica lat_cole lon_cole oficial urbano TDCp* TibcpA* TDCs* TibcsA*  date_grad graduado
 
 
 label var prog_area "Area of HEI program"
@@ -102,6 +102,7 @@ label var publica "=1 if HEI is public"
 label var oficial "=1 if school is public"
 label var urbano "=1 if urban school"
 label var date_grad "year of graduation from HEI"
+label var graduado "graduated from HEI"
 
 
 * Important Value labels
@@ -221,6 +222,38 @@ label var qual_over "Mean of ICFES pctile by school using all students and years
 label var qual_over_sd "SD of ICFES pctile by school using all students and years"
 
 
+*label define vals_prog_area 1 "Agronomia, veterinaria y afines" 2 "Bellas Artes" 3 "Ciencias de la Educacion" 4 "Ciencias de la Salud" 5 "Ciencias Sociales, derecho, ciencias politicas" 6 "Economia Administracion, Contaduria y afines" 7 "Humanidades y ciencias religiosas" 8 "Ingenieria, arquitectura, urbanismo y afines" 9 "Matematicas y ciencias naturales"
+
+* 5 y 6 rent seeker
+* New enrolment type decisions
+gen tec_eng=1 if technic==1 & rent_seeker==1
+replace tec_eng=0 if technic==1 & rent_seeker!=1
+
+gen stemi=(prog_area==9)
+gen engi=(prog_area==8)
+gen engistemi=(prog_area==8 | prog_area==9)
+gen humanidades=(prog_area==2 | prog_area==7 | prog_area==3)
+gen health=(prog_area==1 | prog_area==4)
+gen admin_econ=(prog_area==5 | prog_area==6)
+
+gen others=(prog_area==1 | prog_area==4 | prog_area==2 | prog_area==7 | prog_area==3)
+
+foreach x in stemi engi engistemi humanidades health admin_econ others{
+
+	replace `x'=. if enroled_he==0
+	
+	gen tec`x'=technic*`x'
+	replace tec`x'=. if technic==0
+	
+	gen pro`x'=universitario*`x'
+	replace pro`x'=. if universitario==0
+
+	
+
+}
+
+
+
 compress
 
 sa "${hk}/harm/hk_individual.dta", replace
@@ -238,7 +271,7 @@ sa "${hk}/harm/hk_individual.dta", replace
 ------------------------------------------------------------------------------*/
 
 use "${hk}/harm/hk_individual.dta", clear
-
+drop _*
 foreach x in pct2 timetohe semestertohe{
 	gen `x'_m=`x'
 }
@@ -252,13 +285,19 @@ gen estudiantes=1
 * collapse at the school level
 cd "${data}"
 include copylabels // To copy the labels. You have to have this code. 
-collapse (sd) pct2_sd (median) pct2_m timetohe_m semestertohe_m (mean) qual_over* pct2 timetohe semestertohe (sum) estudiantes graduated enroled_he rent_seeker non_rent_seeker_1 non_rent_seeker_2 universitario technic deserted public private (first) urbano oficial academic codmpio Cale_A lat_cole lon_cole, by(year_period id_cole)
+collapse (sd) pct2_sd (median) pct2_m timetohe_m semestertohe_m (mean) qual_over* pct2 timetohe semestertohe (sum) graduado estudiantes graduated enroled_he rent_seeker non_rent_seeker_1 non_rent_seeker_2 universitario technic deserted public private (first) urbano oficial academic codmpio Cale_A lat_cole lon_cole, by(year_period id_cole)
 include attachlabels // To copy the labels. You have to have this code. 
 
 
 
 gen enrolment_rate=(enroled_he*100)/graduated
 label var enrolment_rate "Higher education enrolment rate"
+
+gen completion_rate=(graduado*100)/enroled_he
+label var completion_rate "Higher education completion rate"
+
+gen desertion_rate=(deserted*100)/enroled_he
+label var desertion_rate "Higher education desertion rate"
 
 	* this are the same measures in Ebbeke
 	
@@ -290,6 +329,35 @@ label var uni_2 "proportion of academic HE program enroled"
 destring year_period, gen(year)
 compress
 sa "${hk}/harm/hk_colegio.dta", replace
+
+
+
+
+***** For completion and desertion I could take another appoach ****
+
+use "${hk}/harm/hk_individual.dta", clear
+
+drop year_period year _*
+rename year_prim year
+
+
+* collapse at the school level
+cd "${data}"
+include copylabels // To copy the labels. You have to have this code. 
+collapse (sum) graduado deserted enroled_he, by(year id_cole)
+include attachlabels // To copy the labels. You have to have this code. 
+
+
+
+gen completion_rate=(graduado*100)/enroled_he
+gen desertion_rate=(deserted*100)/enroled_he
+
+
+label var completion_rate "Higher education completion rate"
+label var desertion_rate "Higher education desertion rate"
+
+compress
+sa "${hk}/harm/hk_colegio_comp.dta", replace
 
 
 /*-----------------------------------------------------------------------------

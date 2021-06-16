@@ -132,7 +132,7 @@ label var npozos_`x' "Number of wells drilled in that year"
 
 	*Now I can take into account the "age" of the oil well
 	
-foreach y in 30 15 {
+foreach y in 1 2 3 4 5 15 30 45 {
 	foreach x in 5000  10000 20000 30000 {
 	gen wells_accum`y'_`x'=.
 
@@ -148,6 +148,27 @@ foreach y in 30 15 {
 	label var wells_accum`y'_`x' "Accumulated number of wells until year and `y' yo wells"
 	}
 }
+
+
+	*Now I can take into account the "age" of the oil well
+/*	
+forvalues y=2(1)50 {
+	foreach x in  10000 {
+	gen wells_accum`y'_`x'=.
+
+		forvalues n = 1(1)`tope' {
+			cap drop i`n'
+			bys id_cole: gen i`n' = 1 if  year[`n']>=year & (year[`n']-year) <= `y'
+			bys id_cole: egen pozos`n' = total(npozos_`x') if i`n'==1
+			bys id_cole: replace wells_accum`y'_`x' = pozos`n' if mi(wells_accum`y'_`x')
+			drop  i`n'
+			drop pozos`n'
+		}
+
+	label var wells_accum`y'_`x' "Accumulated number of wells until year and `y' yo wells"
+	}
+}
+*/
 
 
 
@@ -180,8 +201,8 @@ foreach x in   5000 10000 20000  30000 {
 	recode npozos_`x'(.=0)
 	recode wells_accum_`x'(.=0)
 	
-	foreach y in 30 15 {
-		recode wells_accum`y'_`x'(.=0)
+	foreach y in 1 2 3 4 5 15 30 45 {
+		recode wells_accum`y'_10000(.=0)
 	}
 	
 	foreach y in  1970 1980 1990 2000  2014{

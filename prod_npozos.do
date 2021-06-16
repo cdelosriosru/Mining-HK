@@ -8,7 +8,7 @@
 
 
 */
-
+clear all
 global data "C:/Users/cdelo/Dropbox/HK_Extractives_2020/DATA"
 global fiscal "${data}/Other-muni"
 global inst "${data}/Institutional_Index/harmonized"
@@ -179,13 +179,14 @@ label var produccion "Taxable produccion (BlsKpc)"
 
 * Open data base with wells information
 use "${oil}/harm/wells_measures_mpio.dta", clear
-	
 
 * merge with Info on production
 
 merge 1:1 codmpio year using "${prodcamp}/harm/prod_oil_mpio.dta", gen(mer_prod) keep(3)	
 
 gen blsm=prod_mpio/1000
+
+
 reghdfe blsm npozos_mpio, absorb(year codmpio)
 reghdfe blsm wells_accum_mpio, absorb(year codmpio)
 
@@ -197,9 +198,40 @@ eststo: reghdfe blsm wells_accum_mpio, absorb(year codmpio)
 esttab using "${results}/pozos_prod_mpio.tex", label replace se depvars b(2) star(* 0.10 ** 0.05 *** 0.01)  scalars("N Observations" "r2_a Adjusted R$^2$") sfmt(%9.2gc %6.2f) keep(wells_accum_mpio)
 
 
+***** Now with royalties
+
+* Open data base with wells information
+use "${oil}/harm/wells_measures_mpio.dta", clear
+
+* merge with Info on production
+
+merge 1:1 codmpio year using "${oil}/harm/regalias_definitivas.dta", gen(mer_prod)
+keep if year>2003 
+recode regalias(.=0) 
+*drop if wells_accum_mpio ==. 
+gen post2012=(year>2011)
+
+gen mill_reg=regalias/1000000
+
+reghdfe mill_reg wells_accum_mpio i.post2012 i.year, absorb(codmpio) vce(r)
+
+label var wells_accum_mpio "Number of Wells"
+label var mill_reg "Royalties (Million COP)"
+
+eststo: reghdfe mill_reg wells_accum_mpio, absorb(year codmpio) vce(r)
+
+esttab using "${results}/pozos_royalties_mpio.tex", label replace se depvars b(2) star(* 0.10 ** 0.05 *** 0.01)  scalars("N Observations" "r2_a Adjusted R$^2$") sfmt(%9.2gc %6.2f) keep(wells_accum_mpio)
 
 
 
+use "${oil}/harm/wells_measures_mpio.dta", clear
+
+* merge with Info on production
+
+merge 1:1 codmpio year using "${oil}/harm/regalias_definitivas.dta", gen(mer_prod) keep(3)
+keep if year>2003 
+recode regalias(.=0) 
+drop if wells_accum_mpio ==. 
 
 
 	

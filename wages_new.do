@@ -25,7 +25,48 @@ global mines "${data}/Violencia/harm"
  First create the oil wells_ for Schols and merge with individual hk. 
 
 ------------------------------------------------------------------------------*/ 
+
+
+use "${compiled}/hk_oilwells_individual_mines.dta", clear
+
+tempfile hkmerge
+capture drop TDCpA* TibcpA* TDCsA* TibcsA*
+collapse (first) w_* wells* npo* c_* t_* lo* lb* DESMIL* INCAUTA* MAP* MUSE* OTROS* SOS* depto*, by(year id_cole)
+sa `hkmerge'
+
+
+/*
+* Drop those that wont be used. 
+
+
+gen dropi_wagep=1
+gen dropi_wages=1
+
+forvalues x=2008(1)2014{
+
+	replace dropi_wagep=0 if TibcpA`x'!=. // simply indicate those that should NOT be dropped (those with at least one year of wage info)
+	replace dropi_wages=0 if TibcsA`x'!=. // simply indicate those that should NOT be dropped (those with at least one year of wage info)
+
+}
+
+gen nodropi=1 if dropi_wagep!=dropi_wages
+
+drop if dropi_wagep==1 & nodropi==. 
+drop if dropi_wages==1 & nodropi==. 
+
+
+
+sa "${hk}/harm/hk_individual_wages_wel.dta", replace
+*/
+
+/*
+ Now reshape
+
+
+*/
+/*
 use "${hk}/harm/hk_individual.dta", clear
+
 
 keep year_prim year pct2 enroled_he age mujer graduated id_cole TDCp* TibcpA* TDCs* TibcsA* date_grad annonac technic
 compress
@@ -59,44 +100,28 @@ foreach x in s p{
 }
 
 
-
-
-
 gen nodropi=1 if drops!=dropp
 
 drop if nodropi!=1 & drops==1
 drop if nodropi!=1 & drops==1
-
-
 rename year year_grad
+
 sa "${hk}/harm/hk_individual_wages.dta", replace
-use "${hk}/harm/hk_individual_wages.dta", clear
+
 * merge with wells 
+
+*/
+use "${hk}/harm/hk_individual_wages.dta", clear
 rename year_wage year
-merge m:1 id_cole year using "${oil}/harm/wells_measures_cole.dta", gen(mer_wells)
+merge m:1 id_cole year using `hkmerge', gen(mer_wells2)
+sum TibcsA if mer_wells2==3
 drop if mer_wells==2
 
 drop if year>2014
 drop mer_wells
 
-* merge with ETC indicator
 
-merge m:1 codmpio using  "${municipios}/ETC_mpio.dta", gen(m_etc)
-drop if m_etc!=3 // there is one mpio that does not exist. 
- drop _*
-unique codmpio
 
-*merge with OIL price
-
-merge m:1 year using  "${oil}/raw/oil_price.dta", gen (m_oilprice)
-drop if m_oilprice==2 // years that are not in the sample
-
-* merge with Mines Info
-
-merge m:1 id_cole year using "${mines}/cole_minas_antipersonas.dta", gen(m_mines)
-drop if m_mines==2 // simply schools in sites with more than 200K inhabitants. 
-
-sa "${compiled}/hk_oilwells_individual_mines_wages.dta", replace
 
 
 /*------------------------------------------------------------------------------
@@ -105,127 +130,6 @@ Trransform data a bit.
 ------------------------------------------------------------------------------*/ 
 
 
-
-use "${compiled}/hk_oilwells_individual_mines_wages.dta", clear
-
-
-
-* First create your treatment variables. 
-
-foreach y in 5000 10000 20000{
-
-	foreach x in DESMIL INCAUTA MAP MUSE OTROS SOSP{
-
-		recode `x'_`y'(.=0)
-
-	}
-
-}
-
-foreach x in oil_price brent_price{
-	gen l`x'=ln(`x')
-}
-
-
-
-
-foreach x in   5000 10000 20000  30000  {
-	foreach y in   1980 1990 2000 {
-	
-	* SD version of wells measure
-		egen wells_`y'_`x'sd = std(wells_`y'_`x')
-	
-	* basic independet var
-	
-		gen w_c_`y'_`x'=wells_`y'_`x'*oil_price
-		gen w_b_`y'_`x'=wells_`y'_`x'*brent_price
-
-		label var w_c_`y'_`x' "crude price * number of wells until `y' in `x' buf"
-		label var w_b_`y'_`x' "brent price * number of wells until `y' in `x' buf"
-		
-	* created with the interaction with log prices	
-		gen w_lc_`y'_`x'=wells_`y'_`x'sd*loil_price
-		gen w_lb_`y'_`x'=wells_`y'_`x'sd*lbrent_price
-
-		label var w_lc_`y'_`x' "log crude price *sd number of wells until `y' in `x' buf"
-		label var w_lb_`y'_`x' "log brent price *sd number of wells until `y' in `x' buf"
-		
-	* basic in logs now
-		gen  lw_c_`y'_`x'=ln(w_c_`y'_`x')
-		gen  lw_b_`y'_`x'=ln(w_b_`y'_`x')
-
-
-	}
-}
-
-*STD the wells stocks and flows vars
-
-foreach w in 10000  { // 2500 5000 20000 25000 30000 35000
-	
-	egen wells_accum_`w'sd = std(wells_accum_`w')
-	egen npozos_`w'sd = std(npozos_`w')
-	
-	foreach y in 30 {
-		egen wells_accum`y'_`w'sd = std(wells_accum`y'_`w')
-	}
-}
-
-
-/* Create standarized and winsorized variables in case I want to use them instead. 
-
-foreach x in  semestertohe  {
-
-	quietly summarize `x'
-	generate `x'sd = (`x'-r(mean)) / r(sd)
-		
-	winsor2 `x', cuts(0 99)
-	rename `x'_w `x'_w1
-	label var `x'_w1 "winsorized at 99"
-	
-	winsor2 `x', cuts(0 95)
-	rename `x'_w `x'_w2
-	label var `x'_w2 "winsorized at 99"
-	
-
-
-}
-
-sum semestertohe*,d
-
-*/
-		* CLEANING THE CONTROL GROUP.
-/*
-*generating the pure control var
-
-foreach w in  10000 {
-	bys id_cole: egen control_`w'=max(wells_accum_`w')
-	gen pure_control_`w'=(control_`w'==0 )
-	label var pure_control_`w' "school without oil in buffer `w'in history until 2014"
-}
-*/
-
-
-		* TRENDS
-		
-* creating department variable
-tempvar codmpios
-tostring codmpio, gen(`codmpios')
-replace `codmpios'="0"+`codmpios' if codmpio<10000
-gen deptos=substr(`codmpios',1,2)
-destring deptos, gen(depto)
-
-*creating a centered year variable
-
-gen c_year=year-2001
-gen c_year2=c_year*c_year
-gen c_year3=c_year*c_year2
-gen c_year4=c_year*c_year3
-
-* creating simple year group vars
-*egen t_mpio=group(codmpio year)
-egen t_dep=group(depto year)
-*egen t_etc=group(etc_id year)
-sa "${compiled}/hk_oilwells_individual_mines_wages_clean.dta", replace
 
 *rename non_rent_seeker_1 norent
 
@@ -252,8 +156,6 @@ replace schooling_2=. if technic==.
 gen schooling_y=11
 replace schooling_y=14 if grad==1  & technic==1
 replace schooling_y=16 if grad==1  & technic==0
-rename exp_ exp
-rename exps_ exps
 
 gen exp_y=exp/365 // number of days worked in years. 
 gen exps_y=exps/365 // number of days worked in years. 
@@ -307,12 +209,7 @@ replace min_wage=566700 if year==2012
 replace min_wage=589500 if year==2013
 replace min_wage=616000 if year==2014
 
-
-gen  Tibcp2A=TibcpA
-replace Tibcp2A=TibcsA if year==2012
-
-
-foreach x in p s p2{
+foreach x in p s{
 gen wage`x'_adj=Tibc`x'A/min_wage
 gen lnwage`x'_adj=ln(wage`x'_adj+1)
 }
@@ -324,28 +221,26 @@ sa "${compiled}/hk_oilwells_individual_mines_wages_clean.dta", replace
 ------------------------------------------------------------------------------*/ 
 use "${compiled}/hk_oilwells_individual_mines_wages_clean.dta", clear
 
-capture drop _*
+drop _*
 
-foreach x in s p p2{
-	gen working_`x' = (Tibc`x'A!=.)
+gen working = (TibcpA!=.)
 
-	probit working_`x' i.muje age MAP_10000 exp1 exp1_q pct2  schooling_y i.year i.depto##c.c_year, vce(r)
+probit working i.muje age MAP_10000 exp1 exp1_q pct2  schooling_y i.year i.depto##c.c_year, vce(r)
 
-	predict phat, xb
-
-
-	gen mills_`x' = exp(-.5*phat^2)/(sqrt(2*_pi)*normprob(phat))
+predict phat, xb
 
 
-	drop phat
-}
+gen mills = exp(-.5*phat^2)/(sqrt(2*_pi)*normprob(phat))
+
+
+
 
 
 gen techenrol=technic*enroled
 replace techenrol=. if enroled==0
 
 
-*drop if year>2011
+drop if year>2011
 
 /*
 ivreghdfe lnwage_adj exp1 exp1_q pct2  MAP_10000 i.mujer age enroled_he ( i.enroled_he##c.wells_accum_10000sd wells_accum_10000sd = w_lb_2000_10000 i.enroled_he##c.w_lb_2000_10000 ) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) r
@@ -355,7 +250,7 @@ ivreghdfe wage_adj exp1 exp1_q pct2  MAP_10000 i.mujer age enroled_he ( i.enrole
 
 */
 
-*ivreghdfe wage_adj exp1 exp1_q pct2  MAP_10000 i.mujer age enroled mills ( i.enroled##c.wells_accum_10000sd wells_accum_10000sd = w_lb_2000_10000 i.enroled##c.w_lb_2000_10000 ) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) r
+ivreghdfe wage_adj exp1 exp1_q pct2  MAP_10000 i.mujer age enroled mills ( i.enroled##c.wells_accum_10000sd wells_accum_10000sd = w_lb_2000_10000 i.enroled##c.w_lb_2000_10000 ) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) r
 
 /*
 ivreghdfe wage_adj exp1 exp1_q pct2  MAP_10000 i.mujer age techenrol ( i.techenrol##c.wells_accum_10000sd wells_accum_10000sd = w_lb_2000_10000 i.techenrol##c.w_lb_2000_10000 ) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) r
@@ -386,8 +281,6 @@ reghdfe wage_adj exp1 exp1_q pct2  MAP_10000 i.mujer age i.schooling_2##c.w_lb_2
 keep if year>2007
 * i.schooling_1
 */
-foreach j in p s p2{
-
 foreach x in  2000 {
 	foreach w in  10000   {
 		*preserve
@@ -407,13 +300,13 @@ foreach x in  2000 {
 
 				*second order poly trend
 				
-				ivreghdfe wage`j'_adj experiencia experiencia_q pct2  MAP_`w' i.mujer age enroled (i.enroled##c.wells_accum wells_accum = v_brent_price i.enroled##c.v_brent_price), absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) r
+				ivreghdfe wage_adj experiencia experiencia_q pct2  MAP_`w' i.mujer age enroled (i.enroled##c.wells_accum wells_accum = v_brent_price i.enroled##c.v_brent_price), absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) r
 				estimates store riv_`y'_`w'
 								
-				reghdfe wage`j'_adj   experiencia experiencia_q pct2  MAP_`w' i.mujer age enroled v_brent_price i.enroled##c.v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(r)
+				reghdfe wage_adj   experiencia experiencia_q pct2  MAP_`w' i.mujer age enroled v_brent_price i.enroled##c.v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(r)
 				estimates store rred_`y'_`w'
 				
-				reghdfe wage`j'_adj MAP_`w' experiencia experiencia_q pct2 i.mujer age enroled i.enroled##c.wells_accum wells_accum, absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(r)
+				reghdfe wage_adj MAP_`w' experiencia experiencia_q pct2 i.mujer age enroled i.enroled##c.wells_accum wells_accum, absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(r)
 				estimates store nai_`y'_`w'
 
 					
@@ -440,7 +333,7 @@ local appi replace
 	*foreach x in nai rred riv{
 
 
-	esttab   nai_exp1_`y' rred_exp1_`y' riv_exp1_`y' using "${overleaf}/resultados/individual/mines/wages`j'_NEW_new_`y'", `appi' f  ///
+	esttab   nai_exp1_`y' rred_exp1_`y' riv_exp1_`y' using "${overleaf}/resultados/individual/mines/wages_new_`y'", `appi' f  ///
 		label booktabs b(3) p(3) eqlabels(none) alignment(S) noconstant ///
 		star(* 0.10 ** 0.05 *** 0.01) ///
 		cells(b(star fmt(3)) se(par fmt(2))) ///
@@ -472,13 +365,13 @@ foreach x in  2000 {
 
 				*second order poly trend
 				
-				ivreghdfe wage`j'_adj experiencia experiencia_q pct2  MAP_`w' i.mujer age enroled mills_`j' (i.enroled##c.wells_accum wells_accum = v_brent_price i.enroled##c.v_brent_price), absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) r
+				ivreghdfe wage_adj experiencia experiencia_q pct2  MAP_`w' i.mujer age enroled mills (i.enroled##c.wells_accum wells_accum = v_brent_price i.enroled##c.v_brent_price), absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) r
 				estimates store riv_`y'_`w'
 								
-				reghdfe wage`j'_adj   experiencia experiencia_q pct2  MAP_`w' i.mujer age enroled mills_`j' v_brent_price i.enroled##c.v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(r)
+				reghdfe wage_adj   experiencia experiencia_q pct2  MAP_`w' i.mujer age enroled mills v_brent_price i.enroled##c.v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(r)
 				estimates store rred_`y'_`w'
 				
-				reghdfe wage`j'_adj MAP_`w' experiencia experiencia_q pct2 i.mujer age enroled mills_`j' i.enroled##c.wells_accum wells_accum, absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(r)
+				reghdfe wage_adj MAP_`w' experiencia experiencia_q pct2 i.mujer age enroled mills i.enroled##c.wells_accum wells_accum, absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(r)
 				estimates store nai_`y'_`w'
 
 					
@@ -505,7 +398,7 @@ local appi replace
 	*foreach x in nai rred riv{
 
 
-	esttab   nai_exp1_`y' rred_exp1_`y' riv_exp1_`y' using "${overleaf}/resultados/individual/mines/wages2`j'_NEW_new_mills_`y'", `appi' f  ///
+	esttab   nai_exp1_`y' rred_exp1_`y' riv_exp1_`y' using "${overleaf}/resultados/individual/mines/wages2_new_mills_`y'", `appi' f  ///
 		label booktabs b(3) p(3) eqlabels(none) alignment(S) noconstant ///
 		star(* 0.10 ** 0.05 *** 0.01) ///
 		cells(b(star fmt(3)) se(par fmt(2))) ///
@@ -516,7 +409,7 @@ local appi replace
 	
 	}
 
-}	
+	
 	
 *}
 

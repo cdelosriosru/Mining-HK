@@ -32,8 +32,9 @@ di "`x'"
 	
 	sum wells_accum_`x' MAP_`x'
 }
-
 unique id_cole
+unique id_cole if urbano==1
+unique id_cole if urbano==0
 
 
 
@@ -73,9 +74,51 @@ use "${compiled}/hk_oilwells_individual_mines.dta", clear
 
 sum pct2 enroled_he if pct2!=.
 
-foreach x in rent_seeker non_rent_seeker_1 semestertohe universitario{
+foreach x in engistemi admin_econ others semestertohe universitario{
 sum `x' if enroled_he==1 
 }
+
+keep if year_prim<2011
+sum graduado if enroled_he==1 
+
+sum graduado if enroled_he==1
+
+
+
+
+/*------------------------------------------------------------------------------
+			Wages
+------------------------------------------------------------------------------*/
+
+use "${compiled}/hk_oilwells_individual_mines_wages_clean.dta", clear
+
+
+keep year year_prim TibcpA TibcpA year_grad pct2 id_cole annonac mujer date_grad graduated enroled_he technic age exp_ min_wage wage_adj lnwage_adj
+
+ttest wage, by(technic)
+
+
+
+gen uni=1 if technic==0 & enroled_he==1
+replace uni=2 if technic==1
+replace uni=3 if enroled==0
+
+tab enroled_he technic
+
+forvalues x=2008(1)2014{
+
+sum wage_adj if year==`x'
+di "`x'"
+}
+
+reg wage i.uni i.year
+
+sum TibcpA, d
+
+gen wage_adj=TibcpA/min_wage
+gen lnwage_adj=ln(wage_adj+1)
+
+
 
 /*
 sum non_rent_seeker_1 if enroled_he==1 

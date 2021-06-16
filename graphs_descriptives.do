@@ -13,7 +13,7 @@ global results "${data}/results"
 global compiled "${data}/compiled_sets"
 global results "C:/Users/cdelo/Dropbox/HK_Extractives_2020/RESULTS"
 global overleaf "C:/Users/cdelo/Dropbox/Apps/Overleaf/Oil - HK - Colombia"
-
+global mines "${data}/Violencia/harm"
 
 /*------------------------------------------------------------------------------
 		Pink Sheet data
@@ -89,7 +89,7 @@ generate yeari = mofd(year)
 gen period=8 if year>2001 & year<2015
 gen period2=-2 if year>2001 & year<2015
 
- 
+/* 
 twoway (area period year,  lwidth(0) color(gs14) fintensity(inten50)) ///
 (area period2 year,  lwidth(0) color(gs14) fintensity(inten50)) ///
 (tsline gdp_growth if countrycode=="COL",  yaxis(1) lpattern(dash) lcolor(black))  ///
@@ -102,6 +102,19 @@ ytitle("$/bbl", axis(2))  ///
 xtitle("Year")  ///
 xlabel(2000(3)2018) ///
  scheme(plotplainblind) // note("Oil price is an equally weighted measure of Brent, Dubai and WTI spot prices" "Source: Authors' calculations based on World Bank's pink sheet data and development indicators.", size(vsmall))
+ 
+ */
+ twoway (tsline gdp_growth if countrycode=="COL",  yaxis(1) lpattern(dash) lcolor(black))  ///
+(tsline gdp_growth if countrycode=="LCN",  yaxis(1) lcolor(black) lpattern(dot)) ///
+(tsline crude_petro, yaxis(2) lcolor(black) lpattern(solid)),  legend(pos(6)) legend(row(1)) ///
+legend(order(1 "Colombia" 2 "LAC" 3 "Oil Price (right axis)" )) ///
+legend(ring(1))  ///
+ytitle("GDP growth (%)") ///
+ytitle("$/bbl", axis(2))  ///
+xtitle("Year")  ///
+xlabel(2000(3)2018) ///
+ scheme(plotplainblind) // note("Oil price is an equally weighted measure of Brent, Dubai and WTI spot prices" "Source: Authors' calculations based on World Bank's pink sheet data and development indicators.", size(vsmall))
+
 gr export "${overleaf}/graphs/gdpgrowth.pdf", replace
 
 
@@ -146,9 +159,30 @@ gr export "${overleaf}/graphs/wells.pdf", replace
 
 
 
+/*------------------------------------------------------------------------------
+				Landmines and Oil Price
+-------------------------------------------------------------------------------*/
 
 
+use "${mines}/mpio_minas_antipersonas.dta", clear
+collapse (sum) MAP, by(year)
+merge 1:1 year using "${data}/context/prices.dta"
+keep if _merge==3
+keep if year>1999 & year<=2015
+tsset year, yearly
+ 
+twoway (tsline MAP,  yaxis(1) lpattern(dash) lcolor(black))  ///
+(tsline crude_petro,  yaxis(2) lcolor(black) lpattern(solid)),  legend(pos(6)) legend(row(1)) ///
+legend(order(1 "Landmines" 2 "Oil Price (right axis)" )) ///
+legend(ring(1))  ///
+ytitle("Number of Landmines accidents") ///
+ytitle("$/bbl", axis(2))  ///
+xtitle("Year")  ///
+xlabel(2000(5)2015) ///
+scheme(plotplainblind) // note("Oil price is an equally weighted measure of Brent, Dubai and WTI spot prices. The number of wells is a flow rather than a stock" "Source: Authors' calculations based on World Bank's pink sheet data and ANH data.", size(vsmall)) 
+*text(200 2010 "Correlation = 0.17", size(small) place(n)) ///
 
+gr export "${overleaf}/graphs/landmines_oilprice.pdf", replace
 
 
 
