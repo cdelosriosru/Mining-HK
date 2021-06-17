@@ -1,6 +1,6 @@
 # PROJECT :     	Mining and Human Capital
 # AUTHOR :				Camilo De Los Rios Rueda
-# PURPOSE :				create buffers of schools and count oil wells within them.
+# PURPOSE :				create buffers of schools and count landmines within them.
 # DATE WRITTEN :   		1.06.2020
 # LAST REVISED BY :   	Camilo De Los Rios  Rueda
 
