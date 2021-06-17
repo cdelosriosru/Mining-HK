@@ -27,13 +27,20 @@ This paper explores the impacts of oil exploitation on human capital accumulatio
 	- `mins_schools.R` Crea las variables de minas antipersonas alrededor de todos los colegios usando los archivos de Minas Antipersona y human capital.
 	- `wells_schools_mpio.do` limpia los datos creados en R a nivel de individuo, colegio y municipio
 	- `creating_bases_torun.do` crea las bases necesarias para correr los resultados. 
+	- `publish_with_mines.do` estima los resultados principales y la mayoría de chequeos de robustez
+	- `wages.do` estima la sección de mecanismos del paper
+	- `cleaning_coles.do` crea ids necesarios para uno de los ejercios de robustez
+	- `threats.do` hace algunos de los ejercios de robustez.
+	- `descriptives.do` some descriptive statistics.
+	- `graphs_descriptives` crea algunas de las figuras del paper.
+	- `graphrob.do` crea gráficas de robustez.
 
 
 
 
 
 
-* tp dp
+## To do (Nico Gomez ideas)
 
 descriptives dividida (mediana/media/una dev std encima/debajo de la media)
 municipio tiempo solo. 
