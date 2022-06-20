@@ -35,6 +35,8 @@ This paper explores the impacts of oil exploitation on human capital accumulatio
 	- `graphs_descriptives` crea algunas de las figuras del paper.
 	- `graphrob.do` crea gráficas de robustez.
 
+	- `new_drilling.do` todos los archivos que tienen como sufijo ese pattern estiman resultados usando solamente los nuevo pozos taladrados. 
+
 
 
 
