@@ -21,7 +21,7 @@ global mines "${data}/Violencia/harm"
 
 
 
-
+* urban; oficial
 
 
 /*------------------------------------------------------------------------------
@@ -31,8 +31,9 @@ global mines "${data}/Violencia/harm"
 ------------------------------------------------------------------------------*/
 
 use "${compiled}/hk_oilwells_colegio_mines.dta", clear 
-
-
+drop if pob200==1
+rename urban ur
+rename oficial ofi
 
 
 *  Main
@@ -40,6 +41,7 @@ foreach z in _ {
 local rep_app = "replace"
 	foreach x in  2000 {
 		foreach w in   10000    {
+			foreach het in ur ofi{
 	*		preserve
 			*	drop if w_b_`x'_`w'==0 & pure_control_`w'==0 // drop those that did not have wells in x year but will eventually have (to account for control group contamination)
 
@@ -49,39 +51,19 @@ local rep_app = "replace"
 					rename w_lb_`x'_`w' v_brent_price
 					rename wells_accum`z'`w'sd wells_accum
 					rename npozos_`w'sd npozos
+					rename `het' heteroeff
 
 					*second order poly trend
 					
-					ivreghdfe outcome MAP_`w'  (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(codmpio)
-					estimates store ri`y'`z'`x'`w'
+					ivreghdfe outcome MAP_`w'  (wells_accum c.wells_accum#i.heteroeff=v_brent_price c.v_brent_price#i.heteroeff) , absorb(id_cole i.depto##c.c_year) cluster(codmpio year)
+					estimates store ri`y'`het'
 										
-					reghdfe outcome MAP_`w'  v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2)  vce(cluster codmpio) // the same regardless wells'age 
-					estimates store re`y'`z'`x'`w'
+					reghdfe outcome MAP_`w'  v_brent_price c.v_brent_price#i.heteroeff, absorb(id_cole i.depto##c.c_year)  vce(cluster codmpio year) // the same regardless wells'age 
+					estimates store re`y'`het'
 				
-					reghdfe outcome MAP_`w'  wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster codmpio)
-					estimates store  na`y'`z'`x'`w'
-					
-					
-					
-					
-					* Results with only municipalities pob<200
-					preserve
-					
-					drop if pob200==1
-					
-					*second order poly trend
-					
-					ivreghdfe outcome MAP_`w'  (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(codmpio)
-					estimates store ri2`y'`z'`x'`w'
-										
-					reghdfe outcome MAP_`w'  v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2)  vce(cluster codmpio) // the same regardless wells'age 
-					estimates store re2`y'`z'`x'`w'
-				
-					reghdfe outcome MAP_`w'  wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster codmpio)
-					estimates store  na2`y'`z'`x'`w'
-					
-					restore	
-					
+					reghdfe outcome MAP_`w'  wells_accum  c.wells_accum#i.heteroeff, absorb(id_cole i.depto##c.c_year) vce(cluster codmpio year)
+					estimates store  na`y'`het'
+
 					
 					
 					
@@ -92,20 +74,21 @@ local rep_app = "replace"
 					rename v_brent_price w_lb_`x'_`w'  			
 					rename wells_accum wells_accum`z'`w'sd 
 					rename outcome `y'
+					rename heteroeff `het'
 			
 				}
 	*		restore
 			}
 	}
 }
-
+}
 
 local appi replace
-foreach x in  2000  {
-	foreach z in _ {
 		foreach y in na re ri{		
 		
-			esttab  `y'enrolment_rate`z'`x'10000  `y'2enrolment_rate`z'`x'10000  `y'uni_1`z'`x'10000 `y'2uni_1`z'`x'10000 using "${overleaf}/resultados/new_2022/school/mines/res_10000", `appi' f ///
+			esttab  `y'enrolment_rateur `y'enrolment_rateofi ///
+			`y'uni_1ur `y'uni_1ofi ///
+			using "${overleaf}/resultados/new_2022/heteffects/school_res_10000", `appi' f ///
 				label booktabs b(3) p(3) eqlabels(none) alignment(S) noconstant ///
 				star(* 0.10 ** 0.05 *** 0.01) ///
 				cells(b(star fmt(3)) se(par fmt(2))) ///
@@ -115,339 +98,7 @@ foreach x in  2000  {
 		local appi append
 			
 		}
-	}			
-}
 
-
-
-estimates clear
-*  Buffer robustness
-
-foreach z in _ {
-local rep_app = "replace"
-	foreach x in  2000 {
-		foreach w in  5000 20000 30000  {
-	*		preserve
-			*	drop if w_b_`x'_`w'==0 & pure_control_`w'==0 // drop those that did not have wells in x year but will eventually have (to account for control group contamination)
-
-				foreach y in  enrolment_rate rentseeker_1  uni_1  { //enroled_he rent_seeker universitario deserted timetohe semestertohe
-			
-					rename `y' outcome
-					rename w_lb_`x'_`w' v_brent_price
-					rename wells_accum`z'`w'sd wells_accum
-					rename npozos_`w'sd npozos
-
-					*second order poly trend
-					
-					ivreghdfe outcome MAP_`w'  (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(codmpio)
-					estimates store ri`y'`z'`x'`w'
-										
-					reghdfe outcome MAP_`w'  v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2)  vce(cluster codmpio) // the same regardless wells'age 
-					estimates store re`y'`z'`x'`w'
-				
-					reghdfe outcome MAP_`w'  wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster codmpio)
-					estimates store  na`y'`z'`x'`w'
-					
-					
-					
-					
-					* Results with only municipalities pob<200
-					preserve
-					
-					drop if pob200==1
-					
-					*second order poly trend
-					
-					ivreghdfe outcome MAP_`w'  (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(codmpio)
-					estimates store ri2`y'`z'`x'`w'
-										
-					reghdfe outcome MAP_`w'  v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2)  vce(cluster codmpio) // the same regardless wells'age 
-					estimates store re2`y'`z'`x'`w'
-				
-					reghdfe outcome MAP_`w'  wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster codmpio)
-					estimates store  na2`y'`z'`x'`w'
-					
-					restore	
-					
-					
-					
-					
-					
-					local rep_app = "append"
-					
-					rename npozos npozos_`w'sd 
-					rename v_brent_price w_lb_`x'_`w'  			
-					rename wells_accum wells_accum`z'`w'sd 
-					rename outcome `y'
-			
-				}
-	*		restore
-			}
-	}
-}
-
-
-local appi replace
-
-foreach z in _ {
-foreach x in 2000{
-	foreach y in na re ri{		
-		
-		esttab  `y'enrolment_rate`z'`x'5000 `y'2enrolment_rate`z'`x'5000 `y'enrolment_rate`z'`x'20000 `y'2enrolment_rate`z'`x'20000 `y'enrolment_rate`z'`x'30000 `y'2enrolment_rate`z'`x'30000 `y'uni_1`z'`x'5000 `y'2uni_1`z'`x'5000 `y'uni_1`z'`x'20000 `y'2uni_1`z'`x'20000 `y'uni_1`z'`x'30000 `y'2uni_1`z'`x'30000 using "${overleaf}/resultados/new_2022/school/mines/rob_buffers", `appi' f ///
-			label booktabs b(3) p(3) eqlabels(none) alignment(S) noconstant ///
-			star(* 0.10 ** 0.05 *** 0.01) ///
-			cells(b(star fmt(3)) se(par fmt(2))) ///
-			scalars(rkf)  sfmt(0 3)	
-			
-				local appi append
-
-			
-	}
-}	
-}	
-
-
-
-estimates clear
-
-
-
-
-*  Suitability robustness
-
-foreach z in _ {
-local rep_app = "replace"
-	foreach x in 1970 1980 1990 {
-		foreach w in   10000   {
-	*		preserve
-			*	drop if w_b_`x'_`w'==0 & pure_control_`w'==0 // drop those that did not have wells in x year but will eventually have (to account for control group contamination)
-
-				foreach y in  enrolment_rate rentseeker_1  uni_1  { //enroled_he rent_seeker universitario deserted timetohe semestertohe
-			
-					rename `y' outcome
-					rename w_lb_`x'_`w' v_brent_price
-					rename wells_accum`z'`w'sd wells_accum
-					rename npozos_`w'sd npozos
-
-					*second order poly trend
-					
-					ivreghdfe outcome MAP_`w'  (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(codmpio)
-					estimates store ri`y'`z'`x'`w'
-										
-					reghdfe outcome MAP_`w'  v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2)  vce(cluster codmpio) // the same regardless wells'age 
-					estimates store re`y'`z'`x'`w'
-				
-					reghdfe outcome MAP_`w'  wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster codmpio)
-					estimates store  na`y'`z'`x'`w'
-					
-					
-					
-					
-					* Results with only municipalities pob<200
-					preserve
-					
-					drop if pob200==1
-					
-					*second order poly trend
-					
-					ivreghdfe outcome MAP_`w'  (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(codmpio)
-					estimates store ri2`y'`z'`x'`w'
-										
-					reghdfe outcome MAP_`w'  v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2)  vce(cluster codmpio) // the same regardless wells'age 
-					estimates store re2`y'`z'`x'`w'
-				
-					reghdfe outcome MAP_`w'  wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster codmpio)
-					estimates store  na2`y'`z'`x'`w'
-					
-					restore	
-					
-					
-					
-					
-					
-					local rep_app = "append"
-					
-					rename npozos npozos_`w'sd 
-					rename v_brent_price w_lb_`x'_`w'  			
-					rename wells_accum wells_accum`z'`w'sd 
-					rename outcome `y'
-			
-				}
-	*		restore
-			}
-	}
-}
-	
-	
-local appi replace
-
-foreach z in _ {
-	foreach y in na re ri{		
-		
-		esttab  `y'enrolment_rate`z'197010000 `y'2enrolment_rate`z'197010000 `y'enrolment_rate`z'198010000 `y'2enrolment_rate`z'198010000 `y'enrolment_rate`z'199010000  `y'2enrolment_rate`z'199010000 `y'uni_1`z'197010000 `y'2uni_1`z'197010000 `y'uni_1`z'198010000 `y'2uni_1`z'198010000 `y'uni_1`z'199010000 `y'2uni_1`z'199010000 using "${overleaf}/resultados/new_2022/school/mines/rob_time", `appi' f ///
-			label booktabs b(3) p(3) eqlabels(none) alignment(S) noconstant ///
-			star(* 0.10 ** 0.05 *** 0.01) ///
-			cells(b(star fmt(3)) se(par fmt(2))) ///
-			scalars(rkf)  sfmt(0 3)	
-			
-				local appi append
-
-			
-	}
-}	
-
-
-*Super stringent restrictions
-foreach z in 30_ 15_{
-local rep_app = "replace"
-	foreach x in 1970 2000 {
-		foreach w in  10000  {
-*			preserve
-			*	drop if w_b_`x'_`w'==0 & pure_control_`w'==0 // drop those that did not have wells in x year but will eventually have (to account for control group contamination)
-
-				foreach y in  enrolment_rate uni_1  { //enroled_he rent_seeker universitario deserted timetohe semestertohe
-			
-					rename `y' outcome
-					rename w_lb_`x'_`w' v_brent_price
-					rename wells_accum`z'`w'sd wells_accum
-					rename npozos_`w'sd npozos
-
-					*second order poly trend
-					
-					ivreghdfe outcome MAP_`w'  (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(codmpio)
-					estimates store ri`y'`z'`x'
-										
-					reghdfe outcome MAP_`w'  v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster codmpio) // the same regardless wells'age 
-					estimates store re`y'`z'`x'
-				
-					reghdfe outcome MAP_`w'  wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster codmpio)
-					estimates store  na`y'`z'`x'
-					
-					
-				* Results with only municipalities pob<200
-					preserve
-					
-					drop if pob200==1
-					
-					*second order poly trend
-					
-					ivreghdfe outcome MAP_`w'  (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(codmpio)
-					estimates store ri2`y'`z'`x'
-										
-					reghdfe outcome MAP_`w'  v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster codmpio) // the same regardless wells'age 
-					estimates store re2`y'`z'`x'
-				
-					reghdfe outcome MAP_`w'  wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster codmpio)
-					estimates store  na2`y'`z'`x'
-					
-					restore
-					
-					
-										
-					local rep_app = "append"
-					
-					rename npozos npozos_`w'sd 
-					rename v_brent_price w_lb_`x'_`w'  			
-					rename wells_accum wells_accum`z'`w'sd 
-					rename outcome `y'					
-			
-				}
-*			restore
-			}
-	}
-}
-
-
-
-local appi replace
-
-foreach z in 30_ 15_ {
-	foreach y in na re ri{		
-		
-		esttab  `y'enrolment_rate`z'1970 `y'2enrolment_rate`z'1970 `y'enrolment_rate`z'2000 `y'2enrolment_rate`z'2000 `y'uni_1`z'1970 `y'2uni_1`z'1970 `y'uni_1`z'2000 `y'2uni_1`z'2000 using "${overleaf}/resultados/new_2022/school/mines/rob_stringent_`z'", `appi' f ///
-			label booktabs b(3) p(3) eqlabels(none) alignment(S) noconstant ///
-			star(* 0.10 ** 0.05 *** 0.01) ///
-			cells(b(star fmt(3)) se(par fmt(2))) ///
-			scalars(rkf)  sfmt(0 3)	
-			
-				local appi append
-
-			
-	}
-}	
-
-
-
-
-	
-
-/*
-
-foreach z in _ {
-local rep_app = "replace"
-	foreach x in 1970 1980 1990 2000 {
-		foreach w in  5000 10000 20000 30000  {
-	*		preserve
-			*	drop if w_b_`x'_`w'==0 & pure_control_`w'==0 // drop those that did not have wells in x year but will eventually have (to account for control group contamination)
-
-				foreach y in  enrolment_rate rentseeker_1  uni_1  { //enroled_he rent_seeker universitario deserted timetohe semestertohe
-			
-					rename `y' outcome
-					rename w_lb_`x'_`w' v_brent_price
-					rename wells_accum`z'`w'sd wells_accum
-					rename npozos_`w'sd npozos
-
-					*second order poly trend
-					
-					ivreghdfe outcome MAP_`w'  (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(codmpio)
-					estimates store ri`y'`z'`x'`w'
-										
-					reghdfe outcome MAP_`w'  v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2)  vce(cluster codmpio) // the same regardless wells'age 
-					estimates store re`y'`z'`x'`w'
-				
-					reghdfe outcome MAP_`w'  wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster codmpio)
-					estimates store  na`y'`z'`x'`w'
-					
-					
-					
-					
-					* Results with only municipalities pob<200
-					preserve
-					
-					drop if pob200==1
-					
-					*second order poly trend
-					
-					ivreghdfe outcome MAP_`w'  (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(codmpio)
-					estimates store ri2`y'`z'`x'`w'
-										
-					reghdfe outcome MAP_`w'  v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2)  vce(cluster codmpio) // the same regardless wells'age 
-					estimates store re2`y'`z'`x'`w'
-				
-					reghdfe outcome MAP_`w'  wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster codmpio)
-					estimates store  na2`y'`z'`x'`w'
-					
-					restore	
-					
-					
-					
-					
-					
-					local rep_app = "append"
-					
-					rename npozos npozos_`w'sd 
-					rename v_brent_price w_lb_`x'_`w'  			
-					rename wells_accum wells_accum`z'`w'sd 
-					rename outcome `y'
-			
-				}
-	*		restore
-			}
-	}
-}
-	
-	
-*/
 
 
 
@@ -465,6 +116,84 @@ local rep_app = "replace"
 ------------------------------------------------------------------------------*/
 estimates clear
 use "${compiled}/hk_oilwells_individual_mines.dta", clear
+drop if pob200==1
+rename urban ur
+rename oficial ofi
+
+
+**** Enrolment***
+
+
+
+
+
+* Main
+local rep_app = "replace"
+foreach x in   2000 {
+	foreach w in   10000    {
+			foreach y in  enroled_he universitario semestertohe { 
+				foreach het in ur ofi{
+		
+				rename `y' outcome
+				rename w_lb_`x'_`w' v_brent_price
+				rename wells_accum_`w'sd wells_accum
+				rename npozos_`w'sd npozos
+				rename `het' heteroeff
+
+				*second order poly trend
+				
+				ivreghdfe outcome MAP_`w' i.mujer age (wells_accum c.wells_accum#i.heteroeff= v_brent_price c.v_brent_price#i.heteroeff) , absorb(id_cole i.depto##c.c_year ) cluster(codmpio year)
+				estimates store ri`y'`het'
+				
+				reghdfe outcome MAP_`w' i.mujer age v_brent_price c.v_brent_price#i.heteroeff , absorb(id_cole i.depto##c.c_year ) vce(cluster codmpio year)
+				estimates store re`y'`het'
+				
+				reghdfe outcome MAP_`w' i.mujer age wells_accum c.wells_accum#i.heteroeff , absorb(id_cole i.depto##c.c_year ) vce(cluster codmpio year)
+				estimates store na`y'`het'
+			
+				
+				local rep_app = "append"
+
+				rename npozos npozos_`w'sd 				
+				rename v_brent_price w_lb_`x'_`w'  			
+				rename wells_accum wells_accum_`w'sd 
+				rename outcome `y'
+				rename heteroeff `het' 
+
+		
+			}
+		}
+}
+}
+foreach w in 10000  {
+
+local appi replace
+	foreach x in na re ri{
+
+	
+	esttab   `x'enroled_heur `x'enroled_heofi ///
+	`x'universitariour `x'universitarioofi  ///
+	`x'semestertoheur `x'semestertoheofi   using "${overleaf}/resultados/new_2022/heteffects/ind_res_`w'", `appi' f  ///
+		label booktabs b(3) p(3) eqlabels(none) alignment(S) noconstant ///
+		star(* 0.10 ** 0.05 *** 0.01) ///
+		cells(b(star fmt(3)) se(par fmt(2))) ///
+	scalars(rkf)  sfmt(0 3)
+
+	local appi append
+	
+	}
+
+		
+		
+		
+}
+**# Bookmark #2
+estimates clear
+use "${compiled}/hk_oilwells_individual_mines.dta", clear
+drop if pob200==1
+rename urban ur
+rename oficial ofi
+egen cohortmpio=group(codmpio year)
 
 
 
@@ -479,42 +208,25 @@ local rep_app = "replace"
 foreach x in   2000 {
 	foreach w in   10000    {
 			foreach y in  enroled_he universitario semestertohe { 
+				foreach het in ur ofi{
 		
 				rename `y' outcome
 				rename w_lb_`x'_`w' v_brent_price
 				rename wells_accum_`w'sd wells_accum
 				rename npozos_`w'sd npozos
-			
+				rename `het' heteroeff
 
 				*second order poly trend
 				
-				ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(id_cole)
-				estimates store ri`y'_`x'`w'
+				ivreghdfe outcome MAP_`w' i.mujer age (wells_accum c.wells_accum#i.heteroeff= v_brent_price c.v_brent_price#i.heteroeff) , absorb(id_cole i.depto##c.c_year ) cluster(cohortmpio)
+				estimates store ri`y'`het'
 				
-				reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-				estimates store re`y'_`x'`w'
+				reghdfe outcome MAP_`w' i.mujer age v_brent_price c.v_brent_price#i.heteroeff , absorb(id_cole i.depto##c.c_year ) vce(cluster cohortmpio)
+				estimates store re`y'`het'
 				
-				reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-				estimates store na`y'_`x'`w'
-				
-				
-				preserve
-					
-				drop if pob200==1
-					
-					
-				ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(id_cole)
-				estimates store ri2`y'_`x'`w'
-				
-				reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-				estimates store re2`y'_`x'`w'
-				
-				reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-				estimates store na2`y'_`x'`w'
-				
-				restore
-				
-				
+				reghdfe outcome MAP_`w' i.mujer age wells_accum c.wells_accum#i.heteroeff , absorb(id_cole i.depto##c.c_year ) vce(cluster cohortmpio)
+				estimates store na`y'`het'
+			
 				
 				local rep_app = "append"
 
@@ -522,9 +234,12 @@ foreach x in   2000 {
 				rename v_brent_price w_lb_`x'_`w'  			
 				rename wells_accum wells_accum_`w'sd 
 				rename outcome `y'
+				rename heteroeff `het' 
+
 		
 			}
 		}
+}
 }
 foreach w in 10000  {
 
@@ -532,7 +247,9 @@ local appi replace
 	foreach x in na re ri{
 
 	
-	esttab   `x'enroled_he_2000`w' `x'2enroled_he_2000`w' `x'universitario_2000`w' `x'2universitario_2000`w' `x'semestertohe_2000`w' `x'2semestertohe_2000`w'  using "${overleaf}/resultados/new_2022/individual/mines/res_`w'", `appi' f  ///
+	esttab   `x'enroled_heur `x'enroled_heofi ///
+	`x'universitariour `x'universitarioofi  ///
+	`x'semestertoheur `x'semestertoheofi   using "${overleaf}/resultados/new_2022/heteffects/ind_res2_`w'", `appi' f  ///
 		label booktabs b(3) p(3) eqlabels(none) alignment(S) noconstant ///
 		star(* 0.10 ** 0.05 *** 0.01) ///
 		cells(b(star fmt(3)) se(par fmt(2))) ///
@@ -548,126 +265,28 @@ local appi replace
 }
 
 
-
-
-* Buffer Robustness
-
-estimates clear
-
+* Main
 local rep_app = "replace"
-foreach x in  2000 {
-	foreach w in  5000 20000 30000  {
-			foreach y in  enroled_he universitario semestertohe { 
-		
-				rename `y' outcome
-				rename w_lb_`x'_`w' v_brent_price
-				rename wells_accum_`w'sd wells_accum
-				rename npozos_`w'sd npozos
-			
-
-				*second order poly trend
-				
-				ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(id_cole)
-				estimates store ri`y'_`x'`w'
-				
-				reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-				estimates store re`y'_`x'`w'
-				
-				reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-				estimates store na`y'_`x'`w'
-				
-				
-				preserve
-					
-				drop if pob200==1
-					
-					
-				ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(id_cole)
-				estimates store ri2`y'_`x'`w'
-				
-				reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-				estimates store re2`y'_`x'`w'
-				
-				reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-				estimates store na2`y'_`x'`w'
-				
-				restore
-				
-				
-				
-				local rep_app = "append"
-
-				rename npozos npozos_`w'sd 				
-				rename v_brent_price w_lb_`x'_`w'  			
-				rename wells_accum wells_accum_`w'sd 
-				rename outcome `y'
-		
-			}
-		}
-}
-
-
-local appi replace
-	foreach x in na re ri{
-
-	
-	esttab   `x'enroled_he_20005000 `x'2enroled_he_20005000 `x'enroled_he_200020000 `x'2enroled_he_200020000 `x'enroled_he_200030000 `x'2enroled_he_200030000 `x'universitario_20005000 `x'2universitario_20005000 `x'universitario_200020000 `x'2universitario_200020000 `x'universitario_200030000 `x'2universitario_200030000	`x'semestertohe_20005000 `x'2semestertohe_20005000 `x'semestertohe_200020000 `x'2semestertohe_200020000 `x'semestertohe_200030000 `x'2semestertohe_200030000  using "${overleaf}/resultados/new_2022/individual/mines/rob_buffers", `appi' f  ///
-		label booktabs b(3) p(3) eqlabels(none) alignment(S) noconstant ///
-		star(* 0.10 ** 0.05 *** 0.01) ///
-		cells(b(star fmt(3)) se(par fmt(2))) ///
-	scalars(rkf)  sfmt(0 3)
-
-	local appi append
-	
-	}
-
-
-	
-	
-	
-	
-	* Time Robustness
-estimates clear
-local rep_app = "replace"
-foreach x in  1970 1980 1990  {
+foreach x in   2000 {
 	foreach w in   10000    {
 			foreach y in  enroled_he universitario semestertohe { 
+				foreach het in ofi{
 		
 				rename `y' outcome
 				rename w_lb_`x'_`w' v_brent_price
 				rename wells_accum_`w'sd wells_accum
 				rename npozos_`w'sd npozos
-			
+				rename `het' heteroeff
 
 				*second order poly trend
 				
-				ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(id_cole)
-				estimates store ri`y'_`x'`w'
-				
-				reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-				estimates store re`y'_`x'`w'
-				
-				reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-				estimates store na`y'_`x'`w'
+				ivreghdfe outcome MAP_`w' i.mujer age (wells_accum c.wells_accum#i.heteroeff= v_brent_price c.v_brent_price#i.heteroeff) i.heteroeff, absorb(id_cole i.depto##c.c_year ) cluster(cohortmpio)
+				estimates store ri`y'`het'
 				
 				
-				preserve
-					
-				drop if pob200==1
-					
-					
-				ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(id_cole)
-				estimates store ri2`y'_`x'`w'
-				
-				reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-				estimates store re2`y'_`x'`w'
-				
-				reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-				estimates store na2`y'_`x'`w'
-				
-				restore
-				
-				
+				reghdfe outcome MAP_`w' i.mujer age wells_accum c.wells_accum#i.heteroeff i.heteroeff , absorb(id_cole i.depto##c.c_year ) vce(cluster cohortmpio)
+				estimates store na`y'`het'
+			
 				
 				local rep_app = "append"
 
@@ -675,28 +294,22 @@ foreach x in  1970 1980 1990  {
 				rename v_brent_price w_lb_`x'_`w'  			
 				rename wells_accum wells_accum_`w'sd 
 				rename outcome `y'
+				rename heteroeff `het' 
+
 		
 			}
 		}
 }
-
-
-
+}
+foreach w in 10000  {
 
 local appi replace
-	foreach x in na re ri{
+	foreach x in na ri{
 
 	
-	esttab   `x'enroled_he_197010000 `x'2enroled_he_197010000  ///
-	`x'enroled_he_198010000 `x'2enroled_he_198010000 ///
-	`x'enroled_he_199010000 `x'2enroled_he_199010000 ///
-	`x'universitario_197010000 `x'2universitario_197010000 ///
-	`x'universitario_198010000 `x'2universitario_198010000 ///
-	`x'universitario_199010000 `x'2universitario_199010000 ///
-	`x'semestertohe_197010000  `x'2semestertohe_197010000  ///
-	`x'semestertohe_198010000 `x'2semestertohe_198010000 ///
-	`x'semestertohe_199010000  `x'2semestertohe_199010000   ///	
-	using "${overleaf}/resultados/new_2022/individual/mines/rob_time", `appi' f  ///
+	esttab   `x'enroled_heofi ///
+	 `x'universitarioofi  ///
+	`x'semestertoheofi   using "${overleaf}/resultados/new_2022/heteffects/ind_res3_`w'", `appi' f  ///
 		label booktabs b(3) p(3) eqlabels(none) alignment(S) noconstant ///
 		star(* 0.10 ** 0.05 *** 0.01) ///
 		cells(b(star fmt(3)) se(par fmt(2))) ///
@@ -704,130 +317,43 @@ local appi replace
 
 	local appi append
 	
-	}	
-	
-	
-
-*Super stringent restrictions
-
-estimates clear
-foreach z in 30_ 15_{
-foreach x in  1970 2000 {
-	foreach w in  10000  {
-			foreach y in  enroled_he universitario semestertohe { 
-		
-				rename `y' outcome
-				rename w_lb_`x'_`w' v_brent_price
-				rename wells_accum`z'`w'sd wells_accum
-				rename npozos_`w'sd npozos
-			
-
-				*second order poly trend
-				
-				ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(id_cole)
-				estimates store ri`y'`z'`x'
-				
-				reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-				estimates store re`y'`z'`x'
-				
-				reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-				estimates store na`y'`z'`x'
-				
-				
-				preserve
-				drop if pob200==1
-				
-				ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(id_cole)
-				estimates store ri2`y'`z'`x'
-				
-				reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-				estimates store re2`y'`z'`x'
-				
-				reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-				estimates store na2`y'`z'`x'
-				
-				restore
-				
-				
-				
-				local rep_app = "append"
-
-				rename npozos npozos_`w'sd 				
-				rename v_brent_price w_lb_`x'_`w'  			
-				rename wells_accum wells_accum`z'`w'sd 
-				rename outcome `y'
-		
-			}
-		}
-}
-
-}
-
-local appi replace
-
-foreach z in 30_ 15_ {
-	foreach y in na re ri{		
-		
-		esttab  `y'enroled_he`z'1970 `y'2enroled_he`z'1970 ///
-		`y'enroled_he`z'2000 `y'2enroled_he`z'2000 ///
-		`y'universitario`z'1970  `y'2universitario`z'1970 ///
-		`y'universitario`z'2000 `y'2universitario`z'2000 ///
-		`y'semestertohe`z'1970 `y'2semestertohe`z'1970 ///
-		`y'semestertohe`z'2000 `y'2semestertohe`z'2000 ///
-		using "${overleaf}/resultados/new_2022/individual/mines/rob_stringent_`z'1", `appi' f ///
-			label booktabs b(3) p(3) eqlabels(none) alignment(S) noconstant ///
-			star(* 0.10 ** 0.05 *** 0.01) ///
-			cells(b(star fmt(3)) se(par fmt(2))) ///
-			scalars(rkf)  sfmt(0 3)	
-			
-				local appi append
-
-			
 	}
-}	
 
-	
-/*	
+		
+		
+		
+}
+
+
+
+***********
+
+
+
+* Main
+gen privi=1 if ofi==0
+replace privi=0 if ofi==1
 local rep_app = "replace"
-foreach x in  1970 1980 1990 2000 {
-	foreach w in  5000 10000 20000 30000  {
-			foreach y in  enroled_he universitario semestertohe { 
+foreach x in   2000 {
+	foreach w in   10000    {
+			foreach y in  enroled_he   { 
+				foreach het in privi{
 		
 				rename `y' outcome
 				rename w_lb_`x'_`w' v_brent_price
 				rename wells_accum_`w'sd wells_accum
 				rename npozos_`w'sd npozos
-			
+				rename `het' heteroeff
 
 				*second order poly trend
 				
-				ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(id_cole)
-				estimates store ri`y'_`x'`w'
-				
-				reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-				estimates store re`y'_`x'`w'
-				
-				reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-				estimates store na`y'_`x'`w'
+				ivreghdfe outcome MAP_`w' i.mujer age (wells_accum c.wells_accum#i.heteroeff= v_brent_price c.v_brent_price#i.heteroeff) i.heteroeff, absorb(id_cole i.depto##c.c_year ) cluster(cohortmpio)
+				estimates store ri`y'`het'
 				
 				
-				preserve
-					
-				drop if pob200==1
-					
-					
-				ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(id_cole)
-				estimates store ri2`y'_`x'`w'
-				
-				reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-				estimates store re2`y'_`x'`w'
-				
-				reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-				estimates store na2`y'_`x'`w'
-				
-				restore
-				
-				
+				reghdfe outcome MAP_`w' i.mujer age wells_accum c.wells_accum#i.heteroeff i.heteroeff , absorb(id_cole i.depto##c.c_year ) vce(cluster cohortmpio)
+				estimates store na`y'`het'
+			
 				
 				local rep_app = "append"
 
@@ -835,26 +361,18 @@ foreach x in  1970 1980 1990 2000 {
 				rename v_brent_price w_lb_`x'_`w'  			
 				rename wells_accum wells_accum_`w'sd 
 				rename outcome `y'
+				rename heteroeff `het' 
+
 		
 			}
 		}
+}
 }
 
 
 
 
-
-*/
-
-
-		
-		
-
-
-
-
-
-estimates clear
+******new way 
 
 ***Program Selection*** 
 
@@ -876,31 +394,15 @@ foreach x in   2000 {
 
 				*second order poly trend
 				
-				ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(id_cole)
+				ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year ) cluster(codmpio year)
 				estimates store ri`y'_`x'`w'
 				
-				reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
+				reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year ) vce(cluster codmpio year)
 				estimates store re`y'_`x'`w'
 				
-				reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
+				reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year ) vce(cluster codmpio year)
 				estimates store na`y'_`x'`w'
-				
-				
-				preserve
-				drop if pob200==1
-				ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(id_cole)
-				estimates store ri2`y'_`x'`w'
-				
-				reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-				estimates store re2`y'_`x'`w'
-				
-				reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-				estimates store na2`y'_`x'`w'
-
-				
-				restore
-				
-				
+			
 				local rep_app = "append"
 
 				rename npozos npozos_`w'sd 				
@@ -919,9 +421,9 @@ local appi replace
 	foreach x in na re ri{
 
 	
-	esttab   `x'ste_2000`w' `x'2ste_2000`w' ///
-	`x'adm_2000`w'  `x'2adm_2000`w' ///
-	`x'others_2000`w' `x'2others_2000`w' ///
+	esttab   `x'ste_2000`w' ///
+	`x'adm_2000`w'   ///
+	`x'others_2000`w' ///
 	using "${overleaf}/resultados/new_2022/individual/mines/resP_`w'", `appi' f  ///
 		label booktabs b(3) p(3) eqlabels(none) alignment(S) noconstant ///
 		star(* 0.10 ** 0.05 *** 0.01) ///
@@ -955,31 +457,16 @@ foreach x in  2000 {
 
 				*second order poly trend
 				
-				ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(id_cole)
+				ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year ) cluster(codmpio year)
 				estimates store ri`y'_`x'`w'
 				
-				reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
+				reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year ) vce(cluster codmpio year)
 				estimates store re`y'_`x'`w'
 				
-				reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
+				reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year ) vce(cluster codmpio year)
 				estimates store na`y'_`x'`w'
 				
-				
-				preserve
-				drop if pob200==1
-				ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(id_cole)
-				estimates store ri2`y'_`x'`w'
-				
-				reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-				estimates store re2`y'_`x'`w'
-				
-				reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-				estimates store na2`y'_`x'`w'
-
-				
-				restore
-				
-				
+			
 				local rep_app = "append"
 
 				rename npozos npozos_`w'sd 				
@@ -995,15 +482,15 @@ local appi replace
 	foreach x in na re ri{
 
 	
-	esttab   `x'ste_20005000 `x'2ste_20005000 ///
-	`x'ste_200020000 `x'2ste_200020000 ///
-	`x'ste_200030000 `x'2ste_200030000 ///
-	`x'adm_20005000 `x'2adm_20005000 ///
-	`x'adm_200020000 `x'2adm_200020000 ///
-	`x'adm_200030000 `x'2adm_200030000 ///
-	`x'others_20005000 `x'2others_20005000 ///
-	`x'others_200020000 `x'2others_200020000 ///
-	`x'others_200030000 `x'2others_200030000 ///
+	esttab   `x'ste_20005000 ///
+	`x'ste_200020000  ///
+	`x'ste_200030000 ///
+	`x'adm_20005000  ///
+	`x'adm_200020000  ///
+	`x'adm_200030000 ///
+	`x'others_20005000 ///
+	`x'others_200020000  ///
+	`x'others_200030000  ///
 	using "${overleaf}/resultados/new_2022/individual/mines/robP_buffers", `appi' f  ///
 		label booktabs b(3) p(3) eqlabels(none) alignment(S) noconstant ///
 		star(* 0.10 ** 0.05 *** 0.01) ///
@@ -1032,31 +519,15 @@ foreach x in  1970 1980 1990  {
 
 				*second order poly trend
 				
-				ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(id_cole)
+				ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year ) cluster(codmpio year)
 				estimates store ri`y'_`x'`w'
 				
-				reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
+				reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year ) vce(cluster codmpio year)
 				estimates store re`y'_`x'`w'
 				
-				reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
+				reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year ) vce(cluster codmpio year)
 				estimates store na`y'_`x'`w'
-				
-				
-				preserve
-				drop if pob200==1
-				ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(id_cole)
-				estimates store ri2`y'_`x'`w'
-				
-				reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-				estimates store re2`y'_`x'`w'
-				
-				reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-				estimates store na2`y'_`x'`w'
 
-				
-				restore
-				
-				
 				local rep_app = "append"
 
 				rename npozos npozos_`w'sd 				
@@ -1072,15 +543,15 @@ local appi replace
 	foreach x in na re ri{
 
 	
-	esttab   `x'ste_197010000 `x'2ste_197010000 ///
-	`x'ste_198010000 `x'2ste_198010000 ///
-	`x'ste_199010000 `x'2ste_199010000 ///
-	`x'adm_197010000 `x'2adm_197010000 ///
-	`x'adm_198010000 `x'2adm_198010000 ///
-	`x'adm_199010000 `x'2adm_199010000 ///
-	`x'others_197010000 `x'2others_197010000 ///
-	`x'others_198010000 `x'2others_198010000 ///
-	`x'others_199010000 `x'2others_199010000 ///
+	esttab   `x'ste_197010000  ///
+	`x'ste_198010000  ///
+	`x'ste_199010000 ///
+	`x'adm_197010000  ///
+	`x'adm_198010000  ///
+	`x'adm_199010000  ///
+	`x'others_197010000  ///
+	`x'others_198010000  ///
+	`x'others_199010000  ///
 	using "${overleaf}/resultados/new_2022/individual/mines/robP_time", `appi' f  ///
 		label booktabs b(3) p(3) eqlabels(none) alignment(S) noconstant ///
 		star(* 0.10 ** 0.05 *** 0.01) ///
@@ -1110,33 +581,16 @@ foreach z in 30_ 15_{
 
 					*second order poly trend
 					
-					ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(id_cole)
+					ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year ) cluster(codmpio year)
 					estimates store ri`y'`z'`x'
 					
-					reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
+					reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year ) vce(cluster codmpio year)
 					estimates store re`y'`z'`x'
 					
-					reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
+					reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year ) vce(cluster codmpio year)
 					estimates store na`y'`z'`x'
 					
-					
-					preserve
-					drop if pob200==1
-					
-					ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(id_cole)
-					estimates store ri2`y'`z'`x'
-					
-					reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-					estimates store re2`y'`z'`x'
-					
-					reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-					estimates store na2`y'`z'`x'
-					
-					
-					restore 
-					
-					
-					
+			
 					local rep_app = "append"
 
 					rename npozos npozos_`w'sd 				
@@ -1154,12 +608,12 @@ local appi replace
 foreach z in 30_ 15_ {
 	foreach y in na re ri{		
 		
-		esttab  `y'ste`z'1970 `y'2ste`z'1970 ///
-		`y'ste`z'2000 `y'2ste`z'2000 ///
-		`y'adm`z'1970 `y'2adm`z'1970 ///
-		`y'adm`z'2000 `y'2adm`z'2000 ///
-		`y'others`z'1970 `y'2others`z'1970 ///
-		`y'others`z'2000 `y'2others`z'2000 ///
+		esttab  `y'ste`z'1970  ///
+		`y'ste`z'2000  ///
+		`y'adm`z'1970  ///
+		`y'adm`z'2000  ///
+		`y'others`z'1970  ///
+		`y'others`z'2000 ///
 		using "${overleaf}/resultados/new_2022/individual/mines/robP_stringent_`z'", `appi' f ///
 			label booktabs b(3) p(3) eqlabels(none) alignment(S) noconstant ///
 			star(* 0.10 ** 0.05 *** 0.01) ///
@@ -1187,25 +641,25 @@ foreach x in  1970 1980 1990 2000 {
 
 				*second order poly trend
 				
-				ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(id_cole)
+				ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year ) cluster(codmpio year)
 				estimates store ri`y'_`x'`w'
 				
-				reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
+				reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year ) vce(cluster codmpio year)
 				estimates store re`y'_`x'`w'
 				
-				reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
+				reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year ) vce(cluster codmpio year)
 				estimates store na`y'_`x'`w'
 				
 				
 				preserve
 				drop if pob200==1
-				ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(id_cole)
+				ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year ) cluster(codmpio year)
 				estimates store ri2`y'_`x'`w'
 				
-				reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
+				reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year ) vce(cluster codmpio year)
 				estimates store re2`y'_`x'`w'
 				
-				reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
+				reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year ) vce(cluster codmpio year)
 				estimates store na2`y'_`x'`w'
 
 				
@@ -1275,30 +729,14 @@ drop if year>`t'
 
 					*second order poly trend
 					
-					ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(id_cole)
+					ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year ) cluster(codmpio year)
 					estimates store ri`y'`x'`w'
 					
-					reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
+					reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year ) vce(cluster codmpio year)
 					estimates store re`y'`x'`w'
 					
-					reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
+					reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year ) vce(cluster codmpio year)
 					estimates store na`y'`x'`w'
-					
-					
-					preserve
-					drop if pob200==1
-					
-					ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(id_cole)
-					estimates store ri2`y'`x'`w'
-					
-					reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-					estimates store re2`y'`x'`w'
-					
-					reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-					estimates store na2`y'`x'`w'
-					
-					
-					restore
 					
 					local rep_app = "append"
 
@@ -1337,29 +775,15 @@ local rep_app = "replace"
 
 					*second order poly trend
 					
-					ivreghdfe outcome MAP_`w'  (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(codmpio)
+					ivreghdfe outcome MAP_`w'  (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year ) cluster(codmpio year)
 					estimates store ri`y'`x'`w'
 										
-					reghdfe outcome MAP_`w'  v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster codmpio)
+					reghdfe outcome MAP_`w'  v_brent_price , absorb(id_cole i.depto##c.c_year ) vce(cluster codmpio year)
 					estimates store re`y'`x'`w'
 				
-					reghdfe outcome MAP_`w'  wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster codmpio)
+					reghdfe outcome MAP_`w'  wells_accum , absorb(id_cole i.depto##c.c_year ) vce(cluster codmpio year)
 					estimates store  na`y'`x'`w'
-					
-					preserve
-					drop if pob200==1
-					
-					ivreghdfe outcome MAP_`w'  (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(codmpio)
-					estimates store ri2`y'`x'`w'
-										
-					reghdfe outcome MAP_`w'  v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster codmpio)
-					estimates store re2`y'`x'`w'
-				
-					reghdfe outcome MAP_`w'  wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster codmpio)
-					estimates store  na2`y'`x'`w'
-					
-					restore
-										
+							
 					local rep_app = "append"
 					
 					rename npozos npozos_`w'sd 
@@ -1420,18 +844,18 @@ foreach x in  2000  {
 local appi replace
 		foreach y in na re ri{		
 		
-			esttab  `y'graduado197010000 `y'2graduado197010000 ///
-			`y'graduado198010000 `y'2graduado198010000 ///
-			`y'graduado199010000 `y'2graduado199010000 ///
-			`y'compr197010000 `y'2compr197010000 ///
-			`y'compr198010000 `y'2compr198010000 ///
-			`y'compr199010000 `y'2compr199010000 ///
-			`y'deserted197010000 `y'2deserted197010000 ///
-			`y'deserted198010000 `y'2deserted198010000 ///
-			`y'deserted199010000 `y'2deserted199010000 ///
-			`y'desr197010000 `y'2desr197010000 ///
-			`y'desr198010000  `y'2desr198010000 ///
-			`y'desr199010000 `y'2desr199010000 ///
+			esttab  `y'graduado197010000  ///
+			`y'graduado198010000  ///
+			`y'graduado199010000  ///
+			`y'compr197010000  ///
+			`y'compr198010000  ///
+			`y'compr199010000  ///
+			`y'deserted197010000  ///
+			`y'deserted198010000 ///
+			`y'deserted199010000  ///
+			`y'desr197010000 ///
+			`y'desr198010000  ///
+			`y'desr199010000  ///
 			using "${overleaf}/resultados/new_2022/school/mines/completion_desertion_time", `appi' f ///
 				label booktabs b(3) p(3) eqlabels(none) alignment(S) noconstant ///
 				star(* 0.10 ** 0.05 *** 0.01) ///
@@ -1472,31 +896,15 @@ drop if year>`t'
 
 					*second order poly trend
 					
-					ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(id_cole)
+					ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year ) cluster(codmpio year)
 					estimates store ri`y'`z'`x'
 					
-					reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
+					reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year ) vce(cluster codmpio year)
 					estimates store re`y'`z'`x'
 					
-					reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
+					reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year ) vce(cluster codmpio year)
 					estimates store na`y'`z'`x'
-					
-					preserve
-					drop if pob200==1
-					
-					ivreghdfe outcome MAP_`w' i.mujer age (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(id_cole)
-					estimates store ri2`y'`z'`x'
-					
-					reghdfe outcome MAP_`w' i.mujer age v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-					estimates store re2`y'`z'`x'
-					
-					reghdfe outcome MAP_`w' i.mujer age wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster id_cole)
-					estimates store na2`y'`z'`x'
-					
-					
-					
-					restore
-					
+								
 					
 					local rep_app = "append"
 
@@ -1535,29 +943,15 @@ local rep_app = "replace"
 
 					*second order poly trend
 					
-					ivreghdfe outcome MAP_`w'  (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(codmpio)
+					ivreghdfe outcome MAP_`w'  (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year ) cluster(codmpio year)
 					estimates store ri`y'`z'`x'
 										
-					reghdfe outcome MAP_`w'  v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster codmpio)
+					reghdfe outcome MAP_`w'  v_brent_price , absorb(id_cole i.depto##c.c_year ) vce(cluster codmpio year)
 					estimates store re`y'`z'`x'
 				
-					reghdfe outcome MAP_`w'  wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster codmpio)
+					reghdfe outcome MAP_`w'  wells_accum , absorb(id_cole i.depto##c.c_year ) vce(cluster codmpio year)
 					estimates store  na`y'`z'`x'
-					
-					preserve
-					drop if pob200==1
-					
-					ivreghdfe outcome MAP_`w'  (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) cluster(codmpio)
-					estimates store ri2`y'`z'`x'
-										
-					reghdfe outcome MAP_`w'  v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster codmpio)
-					estimates store re2`y'`z'`x'
-				
-					reghdfe outcome MAP_`w'  wells_accum , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) vce(cluster codmpio)
-					estimates store  na2`y'`z'`x'
-					
-					restore
-					
+			
 										
 					local rep_app = "append"
 					
@@ -1583,14 +977,14 @@ local appi replace
 foreach x in  2000  {
 		foreach y in na re ri{		
 		
-			esttab  `y'graduado`z'1970 `y'2graduado`z'1970 ///
-			`y'graduado`z'2000 `y'2graduado`z'2000 ///
-			`y'compr`z'1970 `y'2compr`z'1970 ///
-			`y'compr`z'2000  `y'2compr`z'2000 ///
-			`y'deserted`z'1970 `y'2deserted`z'1970 ///
-			`y'deserted`z'2000 `y'2deserted`z'2000 ///
-			`y'desr`z'1970 `y'2desr`z'1970 ///
-			`y'desr`z'2000 `y'2desr`z'2000 ///
+			esttab  `y'graduado`z'1970  ///
+			`y'graduado`z'2000  ///
+			`y'compr`z'1970  ///
+			`y'compr`z'2000   ///
+			`y'deserted`z'1970  ///
+			`y'deserted`z'2000  ///
+			`y'desr`z'1970  ///
+			`y'desr`z'2000  ///
 			using "${overleaf}/resultados/new_2022/school/mines/completion_superstringent_`z'", `appi' f ///
 				label booktabs b(3) p(3) eqlabels(none) alignment(S) noconstant ///
 				star(* 0.10 ** 0.05 *** 0.01) ///
@@ -1752,14 +1146,14 @@ local rep_app = "replace"
 
 					*second order poly trend
 					
-					ivreghdfe outcome MAP  (regaliassd=v_brent_price) , absorb(codmpio i.depto##c.c_year i.depto##c.c_year2) r
+					ivreghdfe outcome MAP  (regaliassd=v_brent_price) , absorb(codmpio i.depto##c.c_year ) r
 					estimates store riv_`y'
 					
 					
-					reghdfe outcome MAP  v_brent_price , absorb(codmpio i.depto##c.c_year i.depto##c.c_year2) vce(r)
+					reghdfe outcome MAP  v_brent_price , absorb(codmpio i.depto##c.c_year ) vce(r)
 					estimates store rred_`y'
 					
-					reghdfe outcome MAP regaliassd, absorb(codmpio i.depto##c.c_year i.depto##c.c_year2) vce(r)
+					reghdfe outcome MAP regaliassd, absorb(codmpio i.depto##c.c_year ) vce(r)
 					estimates store na_`y'
 					
 					local rep_app = "append"
@@ -1808,13 +1202,13 @@ local rep_app = "replace"
 
 					*second order poly trend
 					
-					ivreghdfe outcome MAP  (wells_accum=v_brent_price) , absorb(codmpio i.depto##c.c_year i.depto##c.c_year2) r
+					ivreghdfe outcome MAP  (wells_accum=v_brent_price) , absorb(codmpio i.depto##c.c_year ) r
 					estimates store riv_`y'
 					
-					ivreghdfe outcome MAP  (npozos=v_brent_price) , absorb(codmpio i.depto##c.c_year i.depto##c.c_year2) r
+					ivreghdfe outcome MAP  (npozos=v_brent_price) , absorb(codmpio i.depto##c.c_year ) r
 					estimates store riv2_`y'
 					
-					reghdfe outcome MAP  v_brent_price , absorb(codmpio i.depto##c.c_year i.depto##c.c_year2) vce(r)
+					reghdfe outcome MAP  v_brent_price , absorb(codmpio i.depto##c.c_year ) vce(r)
 					estimates store rred_`y'
 					
 					local rep_app = "append"
@@ -1863,13 +1257,13 @@ local rep_app = "replace"
 
 					*second order poly trend
 					
-					ivreghdfe outcome MAP  (wells_accum=v_brent_price) , absorb(codmpio i.depto##c.c_year i.depto##c.c_year2) r
+					ivreghdfe outcome MAP  (wells_accum=v_brent_price) , absorb(codmpio i.depto##c.c_year ) r
 					estimates store `y'_`z'_`x'
 					
-				*	ivreghdfe outcome MAP_`w'  (npozos=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) r // these are the same regardless of the age of the oil wells. 
+				*	ivreghdfe outcome MAP_`w'  (npozos=v_brent_price) , absorb(id_cole i.depto##c.c_year ) r // these are the same regardless of the age of the oil wells. 
 				*	estimates store riv2_`y'_`w'
 					
-				*	reghdfe outcome MAP_`w'  v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) // these are the same regardless of the age of the oil wells. 
+				*	reghdfe outcome MAP_`w'  v_brent_price , absorb(id_cole i.depto##c.c_year ) // these are the same regardless of the age of the oil wells. 
 				*	estimates store rred_`y'_`w'
 					
 					local rep_app = "append"
@@ -1951,13 +1345,13 @@ foreach x in  2000 {
 
 				*second order poly trend
 				
-				ivreghdfe outcome MAP_10000 i.mujer age  (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) r
+				ivreghdfe outcome MAP_10000 i.mujer age  (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year ) r
 				estimates store riv_`y'_`w'
 				
-				ivreghdfe outcome MAP_10000 i.mujer age  (npozos=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) r
+				ivreghdfe outcome MAP_10000 i.mujer age  (npozos=v_brent_price) , absorb(id_cole i.depto##c.c_year ) r
 				estimates store riv2_`y'_`w'
 				
-				reghdfe outcome MAP_10000 i.mujer age  v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) 
+				reghdfe outcome MAP_10000 i.mujer age  v_brent_price , absorb(id_cole i.depto##c.c_year ) 
 				estimates store rred_`y'_`w'
 				
 				local rep_app = "append"
@@ -2124,10 +1518,10 @@ foreach x in  2000 {
 
 				*second order poly trend
 				
-				ivreghdfe outcome (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) r
+				ivreghdfe outcome (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year ) r
 				estimates store riv_`y'_`w'
 				
-				reghdfe outcome v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) 
+				reghdfe outcome v_brent_price , absorb(id_cole i.depto##c.c_year ) 
 				estimates store rred_`y'_`w'
 				
 				local rep_app = "append"
@@ -2298,10 +1692,10 @@ foreach x in  2000 {
 
 				*second order poly trend
 				
-				ivreghdfe outcome (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) r
+				ivreghdfe outcome (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year ) r
 				estimates store riv_`y'_`w'
 				
-				reghdfe outcome v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) 
+				reghdfe outcome v_brent_price , absorb(id_cole i.depto##c.c_year ) 
 				estimates store rred_`y'_`w'
 				
 				local rep_app = "append"
@@ -2374,10 +1768,10 @@ foreach x in  2000 {
 
 				*second order poly trend
 				
-				ivreghdfe outcome (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) r
+				ivreghdfe outcome (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year ) r
 				estimates store riv_`y'_`w'
 				
-				reghdfe outcome v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) 
+				reghdfe outcome v_brent_price , absorb(id_cole i.depto##c.c_year ) 
 				estimates store rred_`y'_`w'
 				
 				local rep_app = "append"
@@ -2631,10 +2025,10 @@ foreach x in  2000 {
 
 				*second order poly trend
 				
-				ivreghdfe outcome (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) r
+				ivreghdfe outcome (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year ) r
 				estimates store riv_`y'_`w'
 				
-				reghdfe outcome v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) 
+				reghdfe outcome v_brent_price , absorb(id_cole i.depto##c.c_year ) 
 				estimates store rred_`y'_`w'
 				
 				local rep_app = "append"
@@ -2800,10 +2194,10 @@ foreach x in  2000 {
 
 				*second order poly trend
 				
-				ivreghdfe outcome (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) r
+				ivreghdfe outcome (wells_accum=v_brent_price) , absorb(id_cole i.depto##c.c_year ) r
 				estimates store riv_`y'_`w'
 				
-				reghdfe outcome v_brent_price , absorb(id_cole i.depto##c.c_year i.depto##c.c_year2) 
+				reghdfe outcome v_brent_price , absorb(id_cole i.depto##c.c_year ) 
 				estimates store rred_`y'_`w'
 				
 				local rep_app = "append"
@@ -2845,5 +2239,3 @@ local appi replace
 	
 	}
 }
-
-

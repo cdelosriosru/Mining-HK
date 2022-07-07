@@ -1,6 +1,6 @@
 
 clear all
-set maxvar 120000, perm
+set maxvar 32767, perm
 global data "C:/Users/cdelo/Dropbox/HK_Extractives_2020/DATA"
 global oil "${data}/Petroleo"
 global hk "${data}/HK"
@@ -189,6 +189,12 @@ egen t_etc=group(etc_id year)
 
 drop _*
 
+*CREATING COHORTS 
+
+egen cohortmpio=group(codmpio year)
+egen cohortcole=group(id_cole year)
+egen cohortdepto=group(depto year)
+
 sa "${compiled}/hk_oilwells_colegio_mines.dta", replace
 /*------------------------------------------------------------------------------
 
@@ -356,6 +362,11 @@ egen t_dep=group(depto year)
 egen t_etc=group(etc_id year)
 
 drop _*
+*CREATING COHORTS 
+
+egen cohortmpio=group(codmpio year)
+egen cohortcole=group(id_cole year)
+egen cohortdepto=group(depto year)
 
 sa "${compiled}/hk_oilwells_colegio_mines_comp.dta", replace
 
@@ -525,6 +536,11 @@ rename non_rent_seeker_1 norent
 
 
 drop _*
+*CREATING COHORTS 
+
+egen cohortmpio=group(codmpio year)
+egen cohortcole=group(id_cole year)
+egen cohortdepto=group(depto year)
 
 sa "${compiled}/hk_oilwells_individual_mines.dta", replace
 
@@ -698,6 +714,11 @@ rename non_rent_seeker_1 norent
 
 
 drop _*
+*CREATING COHORTS 
+
+egen cohortmpio=group(codmpio year)
+egen cohortcole=group(id_cole year)
+egen cohortdepto=group(depto year)
 
 sa "${compiled}/hk_oilwells_individual_mines_comp.dta", replace
 

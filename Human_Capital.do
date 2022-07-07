@@ -48,7 +48,14 @@ Number of unique values of codmpio is  1107
 */
 
 
-drop if pobl_tot>200000
+*drop if pobl_tot>200000
+gen pob200=1 if pobl_tot>200000
+recode  pob200(.=0) 
+
+drop if pob200==1 // las diferencias sutiles que tenia pueden ser porque calculo con toda la poblacion. Necesito calcular con la poblacion que usamos (desviaciones estandar y esas cosas)
+
+gen pob100=1 if pobl_tot>100000
+recode  pob100(.=0) 
 
 unique codmpio
 
@@ -82,8 +89,9 @@ use "${hk}/raw/HumanCapital_clean.dta", clear
 
 * keep only variables that you need. 
 
-keep prog_area periodo year periodoprimiparo pct2 Cale_A colegio_cod codmpio ies annonac mujer desertor academico universitario publica lat_cole lon_cole oficial urbano TDCp* TibcpA* TDCs* TibcsA*  date_grad graduado
+keep prog_area periodo year periodoprimiparo pct2 Cale_A colegio_cod codmpio ies annonac mujer desertor academico universitario publica lat_cole lon_cole oficial urbano  date_grad graduado pob200 pob100 id //TDCp* TibcpA* TDCs* TibcsA* 
 
+rename id id_individuo
 
 label var prog_area "Area of HEI program"
 label var periodo "Period of ICFES"
@@ -103,6 +111,9 @@ label var oficial "=1 if school is public"
 label var urbano "=1 if urban school"
 label var date_grad "year of graduation from HEI"
 label var graduado "graduated from HEI"
+label var pob200 "municipality has over 200k inhabitants"
+label var pob100 "municipality has over 100k inhabitants"
+label var id_individuo "individual random id"
 
 
 * Important Value labels
@@ -165,6 +176,7 @@ replace timetohe=. if timetohe<0 // this is impossible and must be due to digiti
 label var timetohe "Time from graduation date to first year in college"
 
 
+
 * I am going to refine that measure a little bit. 
 
 tempvar primiyear
@@ -195,6 +207,10 @@ gen semestertohe=per_prim-per_icf
 replace semestertohe=. if semestertohe<=0 // this is impossible. No student is able to enrol in HE without ICFES. 
 label var semestertohe "Time from graduation date to first semester in college"
 
+**** How long it takes to graduated
+
+gen timetograd=date_grad-year_prim
+replace timetograd=. if timetograd<=0 
 
 *but this should affect all of my other variables as well 
 
@@ -253,6 +269,19 @@ foreach x in stemi engi engistemi humanidades health admin_econ others{
 }
 
 
+*Immediate and Late enrollment as in the Chile Paper
+
+gen ti_enrol1=0 if enroled_he==0 // no enrollment
+replace ti_enrol1=1 if enroled_he==1 & semestertohe<3 // immediate enrollment
+replace ti_enrol1=2 if enroled_he==1 & semestertohe>2 // late enrollment
+
+
+gen ti_enrol2=0 if enroled_he==0 // no enrollment
+replace ti_enrol2=1 if enroled_he==1 & semestertohe<2 // immediate enrollment
+replace ti_enrol2=2 if enroled_he==1 & semestertohe>1 // late enrollment
+
+
+
 
 compress
 
@@ -271,7 +300,7 @@ sa "${hk}/harm/hk_individual.dta", replace
 ------------------------------------------------------------------------------*/
 
 use "${hk}/harm/hk_individual.dta", clear
-drop _*
+*drop _*
 foreach x in pct2 timetohe semestertohe{
 	gen `x'_m=`x'
 }
@@ -282,13 +311,24 @@ label var pct2_m "Meadian of ICFES"
 label var timetohe_m "Meadian of time to HEI"
 gen estudiantes=1
 
+foreach x in 1 2 {
+	
+	gen imen_`x'=1 if ti_enrol`x'==1
+	recode imen_`x'(.=0)
+	gen laen_`x'=1 if ti_enrol`x'==2
+	recode laen_`x'(.=0)
+
+	
+}
+
 * collapse at the school level
 cd "${data}"
 include copylabels // To copy the labels. You have to have this code. 
-collapse (sd) pct2_sd (median) pct2_m timetohe_m semestertohe_m (mean) qual_over* pct2 timetohe semestertohe (sum) graduado estudiantes graduated enroled_he rent_seeker non_rent_seeker_1 non_rent_seeker_2 universitario technic deserted public private (first) urbano oficial academic codmpio Cale_A lat_cole lon_cole, by(year_period id_cole)
+collapse (sd) pct2_sd (median) pct2_m timetohe_m semestertohe_m (mean) qual_over* pct2 timetohe semestertohe (sum) graduado estudiantes graduated enroled_he rent_seeker non_rent_seeker_1 non_rent_seeker_2 universitario technic deserted public private imen_* laen_* (first) urbano oficial academic codmpio Cale_A lat_cole lon_cole pob200 pob100, by(year_period id_cole)
 include attachlabels // To copy the labels. You have to have this code. 
 
 
+*enrolment and completion rates
 
 gen enrolment_rate=(enroled_he*100)/graduated
 label var enrolment_rate "Higher education enrolment rate"
@@ -298,6 +338,15 @@ label var completion_rate "Higher education completion rate"
 
 gen desertion_rate=(deserted*100)/enroled_he
 label var desertion_rate "Higher education desertion rate"
+
+*late and immediate enrolment rates
+foreach x in 1 2 {
+	gen imen`x'_rate=(imen_`x'*100)/graduated
+	label var imen`x'_rate "Imeadiate enrolment rate version `x'"
+	gen laen`x'_rate=(laen_`x'*100)/graduated
+	label var laen`x'_rate "Late enrolment rate version `x'"
+
+}
 
 	* this are the same measures in Ebbeke
 	
@@ -337,14 +386,14 @@ sa "${hk}/harm/hk_colegio.dta", replace
 
 use "${hk}/harm/hk_individual.dta", clear
 
-drop year_period year _*
-rename year_prim year
+*drop year_period year _*
+*rename year_prim year
 
 
 * collapse at the school level
 cd "${data}"
 include copylabels // To copy the labels. You have to have this code. 
-collapse (sum) graduado deserted enroled_he, by(year id_cole)
+collapse (sum) graduado deserted enroled_he (first) pob200, by(year id_cole)
 include attachlabels // To copy the labels. You have to have this code. 
 
 
@@ -358,7 +407,8 @@ label var desertion_rate "Higher education desertion rate"
 
 compress
 sa "${hk}/harm/hk_colegio_comp.dta", replace
-
+**# Bookmark #1
+/*
 
 /*-----------------------------------------------------------------------------
 

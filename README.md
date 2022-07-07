@@ -55,6 +55,8 @@ hist numb students
 testear mas el numb students
 balance entre reporte y no reporte de wage
 
+testiiing
+
 
 
 

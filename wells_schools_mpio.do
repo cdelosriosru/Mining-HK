@@ -75,7 +75,9 @@ drop lat_cole lon_cole
 * First I will make the same cleaning as before. 
 rename mpio_cole codmpio
 merge m:1 codmpio using "${municipios}/poblacion_mpios.dta", gen (mer_pobl) // there is one municipality code: the 27086 that does not belong to any municipality really. 
-drop if pobl_tot>200000
+*drop if pobl_tot>200000
+*gen pob200=1 if pobl_tot>200000
+*recode  pob200(.=0) 
 drop if mer_pobl!=3 // the info in the using that has no wells
 drop pobl_tot mer_pobl
 drop codmpio
@@ -214,6 +216,8 @@ foreach x in   5000 10000 20000  30000 {
 sa "${oil}/harm/wells_measures_cole.dta", replace
 use "${oil}/harm/wells_measures_cole.dta", clear
 
+*I dont really use this
+/*
 /*------------------------------------------------------------------------------
 
 
